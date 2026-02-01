@@ -1,0 +1,18 @@
+import { dev } from '$app/environment';
+export const title = "Lauhard Andreas";
+export const author = "Lauhard";
+export const domain = "lauhard.dev";
+export const description = "Personal website of Lauhard Andreas";
+export const url = dev ? "http://localhost:5173" : `https://${domain}`;
+export const locale = "en";
+export const siteName = domain;
+export const twitter = "https://x.com/andreaslauhard";
+export const codepen = "https://codepen.io/andycandy";
+export const github = "https://github.com/lauhard";
+export const linkedin = "";
+export const email = "";
+export const phone = "";
+export const address = "";
+export const city = "";
+export const country = "";
+export const postalCode = "";
