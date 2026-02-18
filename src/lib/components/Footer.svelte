@@ -1,5 +1,9 @@
 <script lang="ts">
-    let app_verson = import.meta.env.VITE_VERSION;
+    import { version } from "vite";
+
+    let app_verson = import.meta.env.VITE_VERSION ?? "local.dev";
+    
+    
 
 </script>
 <footer>
