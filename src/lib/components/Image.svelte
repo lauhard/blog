@@ -3,7 +3,7 @@
     type FetchPriority = 'high' | 'low' | 'auto';
     type Decoding = 'async' | 'sync' | 'auto';
     let { src, alt, width, height, loading, srcset, sizes, priority='auto', decoding='auto', className  }:{
-        src:string, alt:string, width:number, height:number, loading?:Loading, srcset?:string, sizes?:string, priority:FetchPriority, decoding:Decoding, className?:string 
+        src:string, alt:string, width:number|string|undefined, height:number|string|undefined, loading?:Loading, srcset?:string, sizes?:string, priority?:FetchPriority, decoding?:Decoding, className?:string 
     } = $props();
 </script>
 

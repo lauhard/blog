@@ -3,8 +3,6 @@
 	import favicon from "$lib/assets/favicon.svg";
 	import Navigation from "$lib/components/Navigation.svelte";
 	import { routes } from "$lib/routes";
-	import { LucideMenu } from "lucide-svelte";
-    import ThemeToggle from "$lib/components/ThemeToggle.svelte";
 	let { children } = $props();
 </script>
 
@@ -13,36 +11,32 @@
 </svelte:head>
 
 <div class="app">
+	<header class="header">
+		<Navigation {routes}>
+		</Navigation>
+	</header>
 	<main>
-		<header class="header">
-			<div class="theme-toggle">
-				<ThemeToggle></ThemeToggle>
-			</div>
-			<button class="btn menu">Menu</button>
-			
-		</header>
 		{@render children()}
 	</main>
 </div>
 
 <style>
-	main {
+	.app {
+		position: relative;
 		header {
-			position: relative;
+			position: fixed;
 			display: flex;
 			justify-content: space-between;
-			.theme-toggle{
-				margin-top:10px;
-			}
-			.menu {
-				display: flex;
-				justify-self: right;
-				background: transparent;
-				font-size: 1.1rem;
-				letter-spacing: 0.1rem;
-				border: none;
-				text-transform: uppercase;
-			}
+			max-height: var(--header-height);
+			height: var(--header-height);
+			width: 100%;
+			z-index: 100;
+			background-color: var(--color-ld-white-300);
+		}
+		main {
+			height: inherit;
+			padding-top: var(--header-height);
+			width: var(--content-width);
 		}
 	}
 </style>

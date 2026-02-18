@@ -11,7 +11,7 @@
 </script>
 
 {#if metadata?.image}
-    <Image src={metadata?.image} alt={"blogpost setup"} iClass="hero-image"
+    <Image src={metadata?.image} alt={"blogpost setup"} className="hero-image" width={'100%'} height={'auto'}
     ></Image>
 {/if}
 <h1 class="heading">{metadata.title}</h1>

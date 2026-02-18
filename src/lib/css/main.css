@@ -1,10 +1,10 @@
 @import url('$lib/css/fonts/satoshi.css');
 @import url('$lib/css/fonts/zodiak.css');
 @import url('$lib/css/fonts/alpino.css');
+@import url('$lib/css/component.css') layer(components);
+@import url('$lib/css/blog.css') layer(blog);
 
 @layer reset, base, base-layout, components, blog, utils;
-@import url('$lib/css/blog.css') layer(blog);
-@import url('$lib/css/component.css') layer(components);
 
 @layer reset {
 
