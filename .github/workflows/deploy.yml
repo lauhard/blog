@@ -31,7 +31,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm cli
+        run: npm ci
         
       - name: Type check
         run: npm run check
