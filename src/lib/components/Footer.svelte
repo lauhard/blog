@@ -1,10 +1,5 @@
 <script lang="ts">
-    import { version } from "vite";
-
     let app_verson = import.meta.env.VITE_VERSION ?? "local.dev";
-    
-    
-
 </script>
 <footer>
     <p> &copy; 2026 by ALau</p>
