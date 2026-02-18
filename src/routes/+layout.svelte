@@ -3,6 +3,7 @@
 	import favicon from "$lib/assets/favicon.svg";
 	import Navigation from "$lib/components/Navigation.svelte";
 	import { routes } from "$lib/routes";
+    import Footer from "$lib/components/Footer.svelte";
 	let { children } = $props();
 </script>
 
@@ -18,6 +19,7 @@
 	<main>
 		{@render children()}
 	</main>
+	<Footer></Footer>
 </div>
 
 <style>
@@ -38,5 +40,6 @@
 			padding-top: var(--header-height);
 			width: var(--content-width);
 		}
+		
 	}
 </style>

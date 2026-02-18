@@ -8,9 +8,10 @@ name:
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     tags:
       - "prod-*"
+      - 'dev-*'
   pull_request:
     branches: [main]
     
@@ -69,8 +70,16 @@ jobs:
         env:
           VITE_VERSIONS: ${{ github.ref_name }}
 
-      - name: Deploy to Cloudflare
+      - name: Deploy to dev (workers.dev)
+        if: startsWith(github.ref, 'refs/tags/dev-')
         run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy to production (alau.at)
+        if: startsWith(github.ref, 'refs/tags/prod-')
+        run: npx wrangler deploy --env production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

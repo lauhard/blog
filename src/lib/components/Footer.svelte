@@ -1,7 +1,10 @@
-<script lang="ts"></script>
+<script lang="ts">
+    let app_verson = import.meta.env.VITE_VERSION;
 
+</script>
 <footer>
-    <p>KeepTrack &copy; 2026 by ALau</p>
+    <p> &copy; 2026 by ALau</p>
+    <span>Version: {app_verson}</span>
 </footer>
 
 <style>
