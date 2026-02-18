@@ -8,6 +8,8 @@
 		"build": "vite build",
 		"preview": "npm run build && wrangler dev",
 		"prepare": "svelte-kit sync || echo ''",
+		"test:unit": "vitest",
+		"test": "npm run test:unit -- --run",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"deploy": "npm run build && wrangler deploy",
@@ -26,9 +28,11 @@
 		"typescript": "^5.9.3",
 		"vite": "^7.2.6",
 		"vite-plugin-devtools-json": "^1.0.0",
+		"vitest": "^4.0.18",
 		"wrangler": "^4.61.1"
 	},
 	"dependencies": {
+		"gsap": "^3.14.2",
 		"lucide-svelte": "^0.563.0",
 		"rehype-slug": "^6.0.0",
 		"rehype-unwrap-images": "^1.0.0"

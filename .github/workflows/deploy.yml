@@ -1,0 +1,76 @@
+name:
+  CI / Deploy
+
+# ─── TRIGGERS ────────────────────────────────────────────────────────────────
+# This workflow runs in two situations:
+#   1. On every push to main and every pull request targeting main → runs CI only
+#   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deploy
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "prod-*"
+  pull_request:
+    branches: [main]
+    
+# ─── CI JOB ──────────────────────────────────────────────────────────────────
+# Runs on every push, PR, and tag push.
+# Checks types, runs tests, and verifies the build compiles without errors.
+# If any step fails, the workflow stops and deploy never runs.
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@4
+
+      - uses: actions/setup-node@4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm cli
+        
+      - name: Type check
+        run: npm run check
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Build app
+        run: npm run build
+
+  # ─── DEPLOY JOB ──────────────────────────────────────────────────────────────
+  # Only runs when:
+  #   - The CI job above passed (needs: ci)
+  #   - The trigger was a tag push starting with "prod-" (not a branch push or PR)
+  #
+  # To deploy: git tag prod-2025-001 && git push origin prod-2025-001
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/prod-')
+    steps:
+      - uses: actions/checkout@4
+
+      - uses: actions/setup-node@4
+        with:
+          node-version: "22"
+          cache: 'npm'
+        
+      - name: Install dependencies
+        run: npm ci    
+      
+      - name: Build app
+        run: npm run build
+        env:
+          VITE_VERSIONS: ${{ github.ref_name }}
+
+      - name: Deploy to Cloudflare
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
