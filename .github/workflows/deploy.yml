@@ -53,7 +53,7 @@ jobs:
   deploy:
     needs: ci
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/prod-') || startsWith(github.ref, 'refs/tags/dev-')
+    if: startsWith(github.ref, 'refs/tags/dev-') && startsWith(github.ref, 'refs/heads/dev')
     steps:
       - uses: actions/checkout@v4
 
@@ -71,15 +71,17 @@ jobs:
           VITE_VERSION: ${{ github.ref_name }}
 
       - name: Deploy to dev (workers.dev)
-        if: startsWith(github.ref, 'refs/tags/dev-')
+        if: startsWith(github.ref, 'refs/tags/dev-') && startsWith(github.ref, 'refs/heads/dev')
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy to production (alau.at)
-        if: startsWith(github.ref, 'refs/tags/prod-')
-        run: npx wrangler deploy --env production
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # - name: Deploy to production (alau.at)
+      #   if: startsWith(github.ref, 'refs/tags/prod-')
+      #   run: npx wrangler deploy --env production
+      #   env:
+      #     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+   
