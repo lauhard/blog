@@ -1,10 +1,10 @@
+@layer reset, base, base-layout, components, blog, utils;
+
 @import url('$lib/css/fonts/satoshi.css');
 @import url('$lib/css/fonts/zodiak.css');
 @import url('$lib/css/fonts/alpino.css');
 @import url('$lib/css/component.css') layer(components);
 @import url('$lib/css/blog.css') layer(blog);
-
-@layer reset, base, base-layout, components, blog, utils;
 
 @layer reset {
 
@@ -16,10 +16,12 @@
 
 
     html {
+        /* Fluid root font size: 15px @ 320px → 18px @ 1280px viewport.
+           Using em (not px) so user browser font preferences are respected. */
+        /* font-size: clamp(0.9375em, 0.875em + 0.3125vw, 1.125em); */
         scroll-behavior: smooth;
         scrollbar-gutter: stable;
         scrollbar-width: thin;
-        scroll-behavior: smooth;
         -moz-text-size-adjust: auto;
         -ms-text-size-adjust: auto;
         -webkit-text-size-adjust: auto;
@@ -100,6 +102,17 @@
     picture {
         max-inline-size: 100%;
         display: block;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+        }
     }
 }
 
@@ -217,10 +230,10 @@
         --color-white-400: #e5e5e5;
         --color-white-300: #f2f2f2;
 
-        --color-orange-300: #ffa15e;
+        --color-orange-300: #ffb879;
         --color-orange-400: #ffa15e;
-        --color-orange-500: #ffa15e;
-        --color-orange-600: #ffa15e;
+        --color-orange-500: #ef8a43;
+        --color-orange-600: #df7328;
         --color-orange-700: #d05d0c;
 
         --color-aquamarine-300: #4dd0c8;
@@ -282,19 +295,26 @@
 
         --shadow-none: none;
 
+        /* adaptive shadow color tokens — higher opacity in dark mode for visibility on near-black backgrounds */
+        --shadow-clr-soft:   light-dark(oklch(0% 0 0 / 8%),  oklch(0% 0 0 / 55%));
+        --shadow-clr-medium: light-dark(oklch(0% 0 0 / 10%), oklch(0% 0 0 / 65%));
+        --shadow-clr-strong: light-dark(oklch(0% 0 0 / 14%), oklch(0% 0 0 / 80%));
+
         /* subtle: buttons, inputs */
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+        --shadow-sm: 0 1px 2px var(--shadow-clr-soft);
 
         /* default: cards */
-        --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.08),
-            0 8px 18px rgba(0, 0, 0, 0.10);
+        --shadow-md:
+            0 1px 2px  var(--shadow-clr-soft),
+            0 8px 18px var(--shadow-clr-medium);
 
         /* elevated: modals / popovers */
-        --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.10),
-            0 20px 40px rgba(0, 0, 0, 0.14);
+        --shadow-lg:
+            0 2px 6px  var(--shadow-clr-medium),
+            0 20px 40px var(--shadow-clr-strong);
 
-        /* focus ring (replaces the incorrect "box-shadow: color" usage below) */
-        --shadow-focus: 0 0 0 3px rgba(34, 162, 141, 0.35);
+        /* focus ring — uses accent token so it switches aquamarine ↔ orange in dark mode */
+        --shadow-focus: 0 0 0 3px oklch(from var(--color-ld-accent-500) l c h / 35%);
 
         /******************** TYPOGRAPHY & LAYOUT ********************/
         --base-font-size: 1rem;
@@ -305,7 +325,8 @@
         --h3: calc(var(--h4) * var(--scale));
         --h2: calc(var(--h3) * var(--scale));
         --h1: calc(var(--h2) * var(--scale));
-        --p: calc(var(--base-font-size) * var(--scale));
+        --p: 1.125rem;
+        --a: 1.125rem;
 
         --font-family: 'Satoshi',
             'Alpino-Black',
@@ -324,8 +345,6 @@
 
         /************************ LAYOUT SIZES ********************/
         --content-width-blog: 800px;
-        --content-width: 1280px;
-        --side: 2rem;
     }
 
 
@@ -390,7 +409,7 @@
 
     small,
     .text-small {
-        font-size: calc(var(--base-font-size) / var(--scale))
+        font-size: calc(var(--base-font-size) / var(--scale));
     }
 
     p {
@@ -401,7 +420,7 @@
            damit Typografie und Layout konsistent sind.
            2em ist ok, aber "tokenisiert" ist wartbarer.
         */
-        margin-bottom: var(--space-8);
+        margin-block-end: var(--space-8);
     }
 
     a {
@@ -421,7 +440,9 @@
     }
 
     .btn {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background-color: transparent;
 
         /* was: padding: .8rem 1.2rem; -> jetzt tokenisiert */
@@ -430,9 +451,9 @@
         font-size: var(--base-font-size);
         color: var(--color-ld-black-500);
         border: 1px solid var(--color-ld-black-500);
-        border-radius: 4px;
+        border-radius: var(--radius-button);
         cursor: pointer;
-        transition: all var(--transition-base) ease;
+        transition: color, border-color, box-shadow var(--transition-base) ease;
         text-align: center;
 
         /* optional: kleine default elevation */
@@ -441,9 +462,8 @@
         &:hover,
         &:active,
         &:focus {
-            transition: all var(--transition-base) ease;
-            border-color:var(--color-ld-accent-500);
-            color:var(--color-ld-accent-500);
+            border-color: var(--color-ld-accent-500);
+            color: var(--color-ld-accent-500);
             text-decoration: none;
         }
 
@@ -479,15 +499,15 @@
 
         border: 1px solid var(--color-ld-white-500);
         border-radius: 4px;
-        width: 100%;
+        inline-size: 100%;
         box-sizing: border-box;
         outline: none;
 
         /* was: margin-bottom: 1rem; -> tokenisiert */
-        margin-bottom: var(--space-4);
+        margin-block-end: var(--space-4);
 
         box-shadow: none;
-        transition: all var(--transition-base) ease;
+        transition: border-color, box-shadow var(--transition-base) ease;
         background-color: inherit;
 
         &:focus,
@@ -501,8 +521,6 @@
                -> Nutze Fokus-Token.
             */
             box-shadow: var(--shadow-focus);
-
-            transition: all var(--transition-base) ease;
         }
     }
 
@@ -513,7 +531,7 @@
     input[type="checkbox"] {
         -webkit-appearance: none;
         appearance: none;
-        width: auto;
+        inline-size: auto;
         font-size: 1.5em;
         margin: 0;
         padding: 2px;
@@ -521,8 +539,9 @@
         cursor: pointer;
         border-radius: 5px;
         box-shadow: none;
-        margin-right: var(--space-2);
+        margin-inline-end: var(--space-2);
         border-color: var(--color-ld-black-500);
+        transition: border-color, box-shadow var(--transition-base) ease-in-out;
 
         &:hover,
         &:focus,
@@ -531,8 +550,6 @@
 
             /* Improvement: gleiche Story -> focus token */
             box-shadow: var(--shadow-focus);
-
-            transition: all var(--transition-base) ease-in-out;
         }
     }
 
@@ -542,13 +559,13 @@
     }
 
     [type="checkbox"]::before {
-        width: 20px;
-        height: 20px;
+        inline-size: 20px;
+        block-size: 20px;
         display: flex;
         content: "";
         z-index: 5;
         position: relative;
-        font-size: inherit
+        font-size: inherit;
     }
 
     [type="checkbox"]:checked::before {
@@ -573,8 +590,8 @@
            -> Entfernt. Wenn du padding brauchst, nutz Token.
         */
         user-select: none;
-        transition: all var(--transition-base) ease-in-out;
-        width: fit-content;
+        transition: color var(--transition-base) ease-in-out;
+        inline-size: fit-content;
         margin: 0;
         padding: 0;
 
@@ -587,7 +604,12 @@
         &:active,
         &:focus {
             color: var(--color-ld-accent-500);
-            transition: all var(--transition-base) ease-in-out;
+        }
+    }
+
+    @media (width < 760px) {
+        :root {
+            --scale: 1.15;
         }
     }
 }
@@ -600,8 +622,14 @@
     }
 
     body {
-        width: 100%;
-        height: 100%;
+        inline-size: 100%;
+        block-size: 100%;
+    }
+
+    @media (width < 600px) {
+        :root {
+            --side: 1rem;
+        }
     }
 
     .app {
@@ -610,13 +638,13 @@
         flex-direction: column;
         align-items: center;
         position: relative;
-        min-height: 100svh;
+        min-block-size: 100svh;
 
         /* Improvement: `min-width: nax-content;` ist ein Tippfehler -> invalid.
            Vermutlich war `max-content` gemeint. Aber min-width: max-content kann Layout sprengen.
            Ich lasse es hier bewusst weg. Wenn du was willst: `min-width: 0;` für Flex-Children. */
-        width: 100%;
-        height: 100%;
+        inline-size: 100%;
+        block-size: 100%;
     }
 
     main {
@@ -624,8 +652,8 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        width: 100%;
-        height: 100%;
+        inline-size: 100%;
+        block-size: 100%;
     }
 }
 
@@ -711,16 +739,3 @@
 @layer components {}
 
 @layer blog{}
-
-@media (width < 760px) {
-    :root {
-        --scale: 1.15;
-
-    }
-}
-
-@media (width < 600px) {
-    :root {
-        --side: 1rem;
-    }
-}

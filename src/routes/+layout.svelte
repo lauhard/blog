@@ -25,6 +25,8 @@
 <style>
 	.app {
 		position: relative;
+		height: auto;
+		width:100%;
 		header {
 			position: fixed;
 			display: flex;
@@ -38,7 +40,8 @@
 		main {
 			height: inherit;
 			padding-top: var(--header-height);
-			width: var(--content-width);
+			max-width: var(--content-width);
+			padding-inline: var(--side);
 		}
 		
 	}
