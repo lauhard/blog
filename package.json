@@ -15,7 +15,7 @@
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types ./src/worker-configuration.d.ts",
 		"git-push:main": "git push origin main && gh run watch",
-		"git-push:dev": "git tag $npm_config_tag && git push origin $npm_config_tag && sleep 4 && gh run watch",
+		"git-push:dev": "git tag $npm_config_tag && git push origin dev && sleep 4 && gh run watch",
 		"git-push:prod": "git tag $npm_config_tag && git push origin $npm_config_tag && sleep 4 && gh run watch"
 	},
 	"devDependencies": {
