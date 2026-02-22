@@ -104,33 +104,29 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Guardrail (single step) tag must be on correct branch
+      - name: Guardrail dev tag must be on dev
         run: |
           set -euo pipefail
           echo "Deploy guardrail"
           echo " Ref: ${GITHUB_REF}"
           echo " SHA: ${GITHUB_SHA}"
 
-          # Remote-Tracking refs aktualisieren, damit origin/dev und origin/main wirklich stimmen
-          git fetch origin dev main --prune
+          # Aktualisiert refs/remotes/origin/dev zuverlässig
+          git fetch origin --prune --tags
 
           echo "origin/dev points to: $(git rev-parse refs/remotes/origin/dev)"
           echo "tag commit is:       ${GITHUB_SHA}"
 
-          if [[ "${GITHUB_REF}" == refs/remotes/origin/dev-* ]]; then
-            echo "  Rule: dev-* tags must be contained in origin/dev"
-            if git merge-base --is-ancestor "${GITHUB_SHA}" "origin/dev"; then
-              echo "OK: Tag commit is contained in origin/dev"
-            else
-              echo "ERROR: dev tag commit is NOT contained in origin/dev"
-              echo "Debug: branches containing tag commit:"
-              git branch -r --contains "${GITHUB_SHA}" || true
-              exit 1
-            fi
+          
+          if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/dev"; then
+            echo "OK: Tag commit is contained in origin/dev"
           else
-            echo "ERROR: unexpected ref for deploy_dev job."
+            echo "ERROR: dev tag commit is NOT contained in origin/dev"
+            echo "Debug: branches containing tag commit:"
+            git branch -r --contains "${GITHUB_SHA}" || true
             exit 1
           fi
+          
 
       # Deploy artefacts
       - name: Setup Node (for running Wrangler from devDependency)
@@ -155,6 +151,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   deploy_prod:
+    name: Deploy Prod (alau.at)
     needs: ci
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/prod-')
@@ -166,14 +163,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Fetch branches (guardrail)
-        run: git fetch origin dev main --prune
-
       - name: Guardrail prod tag must be on main
         run: |
           set -euo pipefail
-          git merge-base --is-ancestor "${GITHUB_SHA}" "origin/main"
+          git fetch origin --prune --tags
+          git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/main"
           echo "OK: prod tag is contained in main"
 
       - name: Setup Node
@@ -185,14 +179,14 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: cf-worker-build
+          name: cf-build
           path: .
 
-      - name: Install (only to get Wrangler, locked)
-        run: npm ci --omit=dev=false
+      - name: Install Wrangler
+        run: npm ci
 
       - name: Deploy to production (routes env)
-        run: npx wrangler deploy --env prod --config wrangler.jsonc
+        run: npx wrangler deploy --env production --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}        
