@@ -15,8 +15,8 @@
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types ./src/worker-configuration.d.ts",
 		"git-push:main": "git push origin main && gh run watch",
-		"deploy-tag:dev": "git fetch origin dev --prune && git tag -a \"$npm_config_tag\" origin/dev -m \"$npm_config_tag\" && git push origin \"$npm_config_tag\"",
-    	"deploy-tag:prod": "git fetch origin main --prune && git tag -a \"$npm_config_tag\" origin/main -m \"$npm_config_tag\" && git push origin \"$npm_config_tag\""
+		"deploy-tag:dev": "git fetch origin dev --prune --tags && git tag -a \"$npm_config_tag\" origin/dev -m \"$npm_config_tag\" && git push origin \"$npm_config_tag\"",
+    	"deploy-tag:prod": "git fetch origin main --prune --tags && git tag -a \"$npm_config_tag\" origin/main -m \"$npm_config_tag\" && git push origin \"$npm_config_tag\""
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
