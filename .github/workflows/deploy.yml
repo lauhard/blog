@@ -112,7 +112,7 @@ jobs:
           echo " SHA: ${GITHUB_SHA}"
 
           # Aktualisiert refs/remotes/origin/dev zuverlässig
-          git fetch origin --prune --tags
+          git fetch origin --prune
 
           echo "origin/dev points to: $(git rev-parse refs/remotes/origin/dev)"
           echo "tag commit is:       ${GITHUB_SHA}"
@@ -166,7 +166,7 @@ jobs:
       - name: Guardrail prod tag must be on main
         run: |
           set -euo pipefail
-          git fetch origin --prune --tags
+          git fetch origin --prune
           git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/main"
           echo "OK: prod tag is contained in main"
 
