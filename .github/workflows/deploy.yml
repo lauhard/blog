@@ -3,7 +3,7 @@ name: CI / Deploy (SvelteKit adapter-cloudflare, tag-gated)
 # ─── TRIGGERS ────────────────────────────────────────────────────────────────
 # This workflow runs in two situations:
 #   1. On every push to main and every pull request targeting main → runs CI only
-#   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deploy
+#   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deployd
 
 on:
   # CI: auf Branch-Pushes und PRs
