@@ -21,7 +21,7 @@
         ></Image>
     {/if}
     <div class="metadata">
-        <h1 class="heading">{metadata.title}</h1>
+        <h2 class="heading">{metadata.title}</h2>
         <p class="excerpt">{metadata.excerpt}</p>
         <p>
             <span class="descr">Published</span>
