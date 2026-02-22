@@ -65,8 +65,7 @@ jobs:
           name: cf-build
           path: |
             .svelte-kit/cloudflare
-            .svelte-kit/output
-            .svelte-kit/cloudflare-tmp
+           
           if-no-files-found: error
           retention-days: 7
 
@@ -88,7 +87,7 @@ jobs:
       - name: Guardrail dev tag must be on dev branch
         run: |
           set -euo pipefail
-          git fetch origin --prune dev:refs/remotes/origin/dev
+          git fetch origin --prune +refs/heads/dev:refs/remotes/origin/dev
           if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/dev"; then
             echo "OK: tag commit is contained in origin/dev"
           else
@@ -107,7 +106,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cf-build
-          path: .
+          path: .svelte-kit/cloudflare
 
       - name: Sanity check artifact
         run: |
@@ -142,7 +141,7 @@ jobs:
       - name: Guardrail prod tag must be on main branch
         run: |
           set -euo pipefail
-          git fetch origin --prune main:refs/remotes/origin/main
+          git fetch origin --prune +refs/heads/main:refs/remotes/origin/main
           if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/main"; then
             echo "OK: tag commit is contained in origin/main"
           else
