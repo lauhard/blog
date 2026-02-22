@@ -114,17 +114,17 @@ jobs:
           # Remote-Tracking refs aktualisieren, damit origin/dev und origin/main wirklich stimmen
           git fetch origin dev main --prune
 
-          if [[ "${GITHUB_REF}" == refs/tags/dev-* ]]; then
+          echo "origin/dev points to: $(git rev-parse refs/remotes/origin/dev)"
+          echo "tag commit is:       ${GITHUB_SHA}"
+
+          if [[ "${GITHUB_REF}" == refs/remotes/origin/dev-* ]]; then
             echo "  Rule: dev-* tags must be contained in origin/dev"
             if git merge-base --is-ancestor "${GITHUB_SHA}" "origin/dev"; then
-              echo "OK: Tag commit is contained in dev."
+              echo "OK: Tag commit is contained in origin/dev"
             else
-              echo "ERROR: dev tag does NOT point to a commit that exists on branch 'dev'."
-              echo "Refusing to deploy."
-              echo ""
-              echo "Fix:"
-              echo "  1) Merge/push the intended commit to 'dev'."
-              echo "  2) Re-create the dev tag on a commit that is on 'dev'."
+              echo "ERROR: dev tag commit is NOT contained in origin/dev"
+              echo "Debug: branches containing tag commit:"
+              git branch -r --contains "${GITHUB_SHA}" || true
               exit 1
             fi
           else
@@ -153,13 +153,13 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          
+
   deploy_prod:
     needs: ci
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/prod-')
     environment:
-      name: prod
+      name: production
 
     steps:
       - name: Checkout (for guardrail only)
