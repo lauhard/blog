@@ -3,12 +3,12 @@ name: CI / Deploy (SvelteKit adapter-cloudflare, tag-gated)
 # ─── TRIGGERS ────────────────────────────────────────────────────────────────
 # This workflow runs in two situations:
 #   1. On every push to main and every pull request targeting main → runs CI only
-#   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deploy
+#   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deployd
 
 on:
   # CI: auf Branch-Pushes und PRs
   push:
-    branches: [main, dev]
+    branches: [main] # Main soll immer geprüft werden
     # Deploy: nur über Tags
     tags:
       - "dev-*"
@@ -80,6 +80,8 @@ jobs:
           name: cf-build
           path: |
             .svelte-kit/cloudflare
+            .svelte-kit/output
+            .svelte-kit/cloudflare-tmp
             wrangler.jsonc
             package.json
             package-lock.json
@@ -103,6 +105,7 @@ jobs:
         # with dev 0 für git history
         with:
           fetch-depth: 0
+          fetch-tags: false
 
       - name: Guardrail dev tag must be on dev
         run: |
@@ -134,18 +137,25 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: cf-build
           path: .
 
+      - name: Sanity check artifact
+        run: |
+          set -euo pipefail
+          test -f .svelte-kit/cloudflare/_worker.js
+          test -f .svelte-kit/output/server/index.js
+          test -f .svelte-kit/cloudflare-tmp/manifest.js
+          echo "OK: artifact contains expected adapter-cloudflare output"
+
       - name: Install dependencies (locked) for Wrangler
         run: npm ci
 
-      - name: Deploy to DEV (default env)
-        run: npx wrangler deploy --config wrangler.jsonc
+      - name: Deploy to DEV (top-level env)
+        run: npx wrangler deploy --env="" --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -163,6 +173,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: false
       - name: Guardrail prod tag must be on main
         run: |
           set -euo pipefail
@@ -181,6 +192,14 @@ jobs:
         with:
           name: cf-build
           path: .
+
+      - name: Sanity check artifact
+        run: |
+          set -euo pipefail
+          test -f .svelte-kit/cloudflare/_worker.js
+          test -f .svelte-kit/output/server/index.js
+          test -f .svelte-kit/cloudflare-tmp/manifest.js
+          echo "OK: artifact contains expected adapter-cloudflare output"
 
       - name: Install Wrangler
         run: npm ci
