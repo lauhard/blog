@@ -55,7 +55,8 @@ jobs:
         run: |
           set -euo pipefail
           test -f .svelte-kit/cloudflare/_worker.js
-          test -d .svelte-kit/cloudflare
+          test -f .svelte-kit/output/server/index.js
+          test -f .svelte-kit/cloudflare-tmp/manifest.js
           echo "OK: build produced .svelte-kit/cloudflare/_worker.js"
 
       - name: Upload build artifact (tag runs only)
@@ -63,8 +64,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cf-build
-          path: |
-            .svelte-kit/cloudflare
+          path: .
            
           if-no-files-found: error
           retention-days: 7
@@ -112,13 +112,15 @@ jobs:
         run: |
           set -euo pipefail
           test -f .svelte-kit/cloudflare/_worker.js
+          test -f .svelte-kit/output/server/index.js
+          test -f .svelte-kit/cloudflare-tmp/manifest.js
           echo "OK: artifact contains expected worker entry"
 
       - name: Install dependencies (Wrangler from devDependencies)
         run: npm ci
 
       - name: Deploy to DEV
-        run: npx wrangler deploy --config wrangler.jsonc
+        run: npx wrangler deploy --env="" --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
