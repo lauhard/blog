@@ -1,5 +1,4 @@
-name:
-  CI / Deploy
+name: CI / Deploy (SvelteKit adapter-cloudflare, tag-gated)
 
 # ─── TRIGGERS ────────────────────────────────────────────────────────────────
 # This workflow runs in two situations:
@@ -7,90 +6,193 @@ name:
 #   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deploy
 
 on:
+  # CI: auf Branch-Pushes und PRs
   push:
     branches: [main, dev]
+    # Deploy: nur über Tags
     tags:
+      - "dev-*"
       - "prod-*"
-      - 'dev-*'
   pull_request:
-    branches: [main]
-    
+    branches: [main, dev]
+
+# Least privilege: Workflow braucht nur Repo lesen (Checkout).
+# Wir pushen keine Tags, erstellen keine Releases, schreiben nichts zurück.
+permissions:
+  contents: read
+
+# Verhindert parallele Runs für denselben Ref.
+# Beispiel: 3 pushes schnell hintereinander auf dev -> nur der letzte läuft fertig.
+concurrency:
+  group: ci-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+# use same shell
+defaults:
+  run:
+    shell: bash
+
 # ─── CI JOB ──────────────────────────────────────────────────────────────────
 # Runs on every push, PR, and tag push.
 # Checks types, runs tests, and verifies the build compiles without errors.
 # If any step fails, the workflow stops and deploy never runs.
 
 jobs:
-  test:
+  ci:
+    name: CI (typecheck, test, build)
     runs-on: ubuntu-latest
+
     steps:
-      - name: github.ref_name
-        run: echo "github.ref_name ${{ github.ref_name }}"
-      - name: github.ref_type
-        run: echo "github.ref_type ${{ github.ref_type }}"
-      - name: github.ref
-        run: echo "github.ref ${{ github.ref }}"
-  #ci:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v4
-#
-  #    - uses: actions/setup-node@v4
-  #      with:
-  #        node-version: "22"
-  #        cache: "npm"
-#
-  #    - name: Install dependencies
-  #      run: npm ci
-  #      
-  #    - name: Type check
-  #      run: npm run check
-#
-  #    - name: Run unit tests
-  #      run: npm run test
-#
-  #    - name: Build app
-  #      run: npm run build
+      - name: Checkout (full history required for tag ancestry guardrails)
+        uses: actions/checkout@v4
+        with:
+          # Default ist shallow (1 Commit). Für merge-base/ancestry checks brauchen wir Historie.
+          fetch-depth: 0
 
-  # ─── DEPLOY JOB ──────────────────────────────────────────────────────────────
-  # Only runs when:
-  #   - The CI job above passed (needs: ci)
-  #   - The trigger was a tag push starting with "prod-" (not a branch push or PR)
-  #
-  # To deploy: git tag prod-2025-001 && git push origin prod-2025-001
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    if: startsWith(github.ref, 'refs/tags/dev-')
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Setup Node (locked installs via npm ci)
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: 'npm'
-        
-      - name: Install dependencies
-        run: npm ci    
-      
-      - name: Build app
+          cache: "npm"
+
+      - name: Install dependencies (from package-lock.json)
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Unit tests
+        run: npm run test
+
+        # build
+      - name: Build (SvelteKit adapter-cloudflare output)
         run: npm run build
         env:
+          # Version Injection: Tagname (z.B. dev-2026-001 / prod-2026-001)
+          # Für Branch Builds ist ref_name z.B. "dev" oder "main".
           VITE_VERSION: ${{ github.ref_name }}
 
-      - name: Deploy to dev (workers.dev)
-        run: npx wrangler deploy
+      # Artifact nur für Tag Runs: Deploy nutzt exakt den Build, der CI bestanden hat.
+      - name: Upload Cloudflare Worker build artifact (tag runs only)
+        if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/tags/prod-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-build
+          path: |
+            .svelte-kit/cloudflare
+            wrangler.jsonc
+            package.json
+            package-lock.json
+          # Wenn das fehlt, ist Build kaputt -> hart failen statt still "warn".
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy_dev:
+    name: Deploy DEV (workers.dev)
+    needs: ci
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/dev-')
+
+    # GitHub Environment (optional): hier kannst du z.B. eigene Secrets/Policies für dev definieren.
+    environment:
+      name: dev
+
+    steps:
+      - name: Checkout (needed for guardrail + git refs)
+        uses: actions/checkout@v4
+        # with dev 0 für git history
+        with:
+          fetch-depth: 0
+
+      - name: Guardrail (single step) tag must be on correct branch
+        run: |
+          set -euo pipefail
+          echo "Deploy guardrail"
+          echo " Ref: ${GITHUB_REF}"
+          echo " SHA: ${GITHUB_SHA}"
+
+          # Remote-Tracking refs aktualisieren, damit origin/dev und origin/main wirklich stimmen
+          git fetch origin dev main --prune
+
+          if [[ "${GITHUB_REF}" == refs/tags/dev-* ]]; then
+            echo "  Rule: dev-* tags must be contained in origin/dev"
+            if git merge-base --is-ancestor "${GITHUB_SHA}" "origin/dev"; then
+              echo "OK: Tag commit is contained in dev."
+            else
+              echo "ERROR: dev tag does NOT point to a commit that exists on branch 'dev'."
+              echo "Refusing to deploy."
+              echo ""
+              echo "Fix:"
+              echo "  1) Merge/push the intended commit to 'dev'."
+              echo "  2) Re-create the dev tag on a commit that is on 'dev'."
+              exit 1
+            fi
+          else
+            echo "ERROR: unexpected ref for deploy_dev job."
+            exit 1
+          fi
+
+      # Deploy artefacts
+      - name: Setup Node (for running Wrangler from devDependency)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cf-build
+          path: .
+
+      - name: Install dependencies (locked) for Wrangler
+        run: npm ci
+
+      - name: Deploy to DEV (default env)
+        run: npx wrangler deploy --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          
+  deploy_prod:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/prod-')
+    environment:
+      name: prod
 
-      # - name: Deploy to production (alau.at)
-      #   if: startsWith(github.ref, 'refs/tags/prod-')
-      #   run: npx wrangler deploy --env production
-      #   env:
-      #     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      #     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout (for guardrail only)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-   
+      - name: Fetch branches (guardrail)
+        run: git fetch origin dev main --prune
+
+      - name: Guardrail prod tag must be on main
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "${GITHUB_SHA}" "origin/main"
+          echo "OK: prod tag is contained in main"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cf-worker-build
+          path: .
+
+      - name: Install (only to get Wrangler, locked)
+        run: npm ci --omit=dev=false
+
+      - name: Deploy to production (routes env)
+        run: npx wrangler deploy --env prod --config wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}        
