@@ -65,7 +65,7 @@ jobs:
         with:
           name: cf-build
           path: .svelte-kit
-           
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
 
@@ -120,7 +120,7 @@ jobs:
         run: npm ci
 
       - name: Deploy to DEV
-        run: npx wrangler deploy --env="" --config wrangler.jsonc
+        run: npx wrangler deploy --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
