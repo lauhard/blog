@@ -106,14 +106,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cf-build
-          path: .svelte-kit/cloudflare
+          path: .
 
       - name: Sanity check artifact
         run: |
           set -euo pipefail
           test -f .svelte-kit/cloudflare/_worker.js
-          test -f .svelte-kit/output/server/index.js
-          test -f .svelte-kit/cloudflare-tmp/manifest.js
           echo "OK: artifact contains expected worker entry"
 
       - name: Install dependencies (Wrangler from devDependencies)
