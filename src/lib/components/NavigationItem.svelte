@@ -4,21 +4,17 @@
     import { type Route } from "$lib/routes";
     let {
         route,
-        classPrefix = "",
+        className, //inject Custom Class
         ...props
     }: {
         route: Route;
-        classPrefix?: string;
+        className?: string;
     } = $props();
 
-    const isNavItemActive = (routePath: string) => {
-        if (
-            page.url.pathname == routePath ||
-            (page.url.pathname.includes(routePath.toLowerCase()) &&
-                routePath.toLowerCase() != "/")
-        ) {
-            return true;
-        }
+    const isActive = (routePath: string) => {
+        const current = page.url.pathname;
+        if (routePath === "/") return current === "/";
+        return current === routePath || current.startsWith(routePath + "/");
     };
 </script>
 
@@ -30,13 +26,13 @@
 {/snippet}
 
 <li
-    class="{classPrefix}nav-item"
-    class:active={route.path ? isNavItemActive(route.path) === true : false}
+    class="nav-item {className}"
+    class:active={route.path ? isActive(route.path) === true : false}
     data-hasList={route?.subRoutes ? "true" : "false"}
     data-route-name={route.name}
     {...props}
 >
-    <a class="{classPrefix}nav-link" href={resolve(route.path as any)}>
+    <a class="nav-link " href={resolve(route.path as any)}>
         {@render GetIconFromRoute(route)}
         {route.name}
     </a>

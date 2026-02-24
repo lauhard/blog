@@ -1,12 +1,15 @@
 import { getPostBySlug } from "$lib";
 import { error } from "@sveltejs/kit";
-import type { PageLoad } from "./$types";
+import type { LayoutLoad } from "./$types";
 
-export const load: PageLoad = async ({ params }) => {
+export const load: LayoutLoad = async ({ params }) => {
     try {
         const slug = params.slug;
 
         const blogContent = await getPostBySlug(slug)
+        if (!blogContent) {
+            throw new Error("Post not found or is a draft");
+        }
         return {
             ...blogContent
         }

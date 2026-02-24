@@ -20,15 +20,25 @@ export const markdownFiles = async () => {
         console.error("Error loading markdown files", (e as Error)?.message);
         throw new Error("Error loading markdown files - " + (e as Error)?.message);
     }
-
 }
 export const getPostBySlug = async (slug: string) => {
     try {
         const post = await import(`./posts/${slug}.md`);
+        //find prev and next post based on the order in the markdownFiles
+        const allPosts = await markdownFiles();
+        const currentIndex = allPosts.findIndex(p => p.metadata.slug === slug);
+        //slices the array from 0 to the current index
+        // then reverse the array to find the nearest to current
+        // find for the first post that is published
+        const prevPost = allPosts.slice(0, currentIndex).reverse().find(p => p.metadata.published === true);
+        const nextPost = allPosts.slice(currentIndex + 1).find(p => p.metadata.published === true);
+        
         if (post && post.metadata?.published === true) {
             return {
                 post: post.default,
-                metadata: post.metadata
+                metadata: post.metadata,
+                prevPost: prevPost ? { slug: prevPost.metadata.slug, title: prevPost.metadata.title } : null,
+                nextPost: nextPost ? { slug: nextPost.metadata.slug, title: nextPost.metadata.title } : null
             }
         } // when draft is true, return null
         return null;

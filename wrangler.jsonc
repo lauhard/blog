@@ -16,6 +16,20 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"env": {
+		"production": {
+			"routes": [
+				{
+					"pattern": "alau.at/*",
+					"zone_name": "alau.at"
+				},
+				{
+					"pattern": "www.alau.at/*",
+					"zone_name": "alau.at"
+				}
+			]
+		}
 	}
 	/**
 	 * Smart Placement

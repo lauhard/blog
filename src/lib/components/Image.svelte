@@ -1,20 +1,25 @@
 <script lang="ts">
-    let { src = "", alt = "", iClass = "" } = $props();
-    let loading: "lazy" | "eager" = "lazy";
+    type Loading = 'lazy'|'eager'|undefined;
+    type FetchPriority = 'high' | 'low' | 'auto';
+    type Decoding = 'async' | 'sync' | 'auto';
+    let { src, alt, width, height, loading, srcset, sizes, priority='auto', decoding='auto', className  }:{
+        src:string, alt:string, width:number|string|undefined, height:number|string|undefined, loading?:Loading, srcset?:string, sizes?:string, priority?:FetchPriority, decoding?:Decoding, className?:string 
+    } = $props();
 </script>
 
-<img class="markdown-image {iClass}" {src} {alt} width="100" height="100" {loading} />
+<img
+    class="image {className}"
+	src={src}
+	alt={alt}
+	width={width}
+	height={height}
+	{srcset}
+	{sizes}
+	loading={loading}
+    decoding={decoding}
+	fetchpriority={priority}
+/>
 
 <style>
-    .markdown-image {
-        object-position: center;
-        object-fit: contain;
-        display: flex;
-        width: 100%;
-        height: auto;
-        max-inline-size: 100%;
-        max-block-size: 100%;
-        border-radius: var(--radius-5);
-        box-sizing: border-box;
-    }
+    
 </style>

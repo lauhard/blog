@@ -1,4 +1,10 @@
-@import url('$lib/fonts/font.css');
+@layer reset, base, base-layout, components, blog, utils;
+
+@import url('$lib/css/fonts/satoshi.css');
+@import url('$lib/css/fonts/zodiak.css');
+@import url('$lib/css/fonts/alpino.css');
+@import url('$lib/css/component.css') layer(components);
+@import url('$lib/css/blog.css') layer(blog);
 
 @layer reset {
 
@@ -10,10 +16,12 @@
 
 
     html {
+        /* Fluid root font size: 15px @ 320px → 18px @ 1280px viewport.
+           Using em (not px) so user browser font preferences are respected. */
+        /* font-size: clamp(0.9375em, 0.875em + 0.3125vw, 1.125em); */
         scroll-behavior: smooth;
         scrollbar-gutter: stable;
         scrollbar-width: thin;
-        scroll-behavior: smooth;
         -moz-text-size-adjust: auto;
         -ms-text-size-adjust: auto;
         -webkit-text-size-adjust: auto;
@@ -94,6 +102,17 @@
     picture {
         max-inline-size: 100%;
         display: block;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+        }
     }
 }
 
@@ -211,10 +230,10 @@
         --color-white-400: #e5e5e5;
         --color-white-300: #f2f2f2;
 
-        --color-orange-300: #ffa15e;
+        --color-orange-300: #ffb879;
         --color-orange-400: #ffa15e;
-        --color-orange-500: #ffa15e;
-        --color-orange-600: #ffa15e;
+        --color-orange-500: #ef8a43;
+        --color-orange-600: #df7328;
         --color-orange-700: #d05d0c;
 
         --color-aquamarine-300: #4dd0c8;
@@ -276,19 +295,26 @@
 
         --shadow-none: none;
 
+        /* adaptive shadow color tokens — higher opacity in dark mode for visibility on near-black backgrounds */
+        --shadow-clr-soft:   light-dark(oklch(0% 0 0 / 8%),  oklch(0% 0 0 / 55%));
+        --shadow-clr-medium: light-dark(oklch(0% 0 0 / 10%), oklch(0% 0 0 / 65%));
+        --shadow-clr-strong: light-dark(oklch(0% 0 0 / 14%), oklch(0% 0 0 / 80%));
+
         /* subtle: buttons, inputs */
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+        --shadow-sm: 0 1px 2px var(--shadow-clr-soft);
 
         /* default: cards */
-        --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.08),
-            0 8px 18px rgba(0, 0, 0, 0.10);
+        --shadow-md:
+            0 1px 2px  var(--shadow-clr-soft),
+            0 8px 18px var(--shadow-clr-medium);
 
         /* elevated: modals / popovers */
-        --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.10),
-            0 20px 40px rgba(0, 0, 0, 0.14);
+        --shadow-lg:
+            0 2px 6px  var(--shadow-clr-medium),
+            0 20px 40px var(--shadow-clr-strong);
 
-        /* focus ring (replaces the incorrect "box-shadow: color" usage below) */
-        --shadow-focus: 0 0 0 3px rgba(34, 162, 141, 0.35);
+        /* focus ring — uses accent token so it switches aquamarine ↔ orange in dark mode */
+        --shadow-focus: 0 0 0 3px oklch(from var(--color-ld-accent-500) l c h / 35%);
 
         /******************** TYPOGRAPHY & LAYOUT ********************/
         --base-font-size: 1rem;
@@ -299,9 +325,11 @@
         --h3: calc(var(--h4) * var(--scale));
         --h2: calc(var(--h3) * var(--scale));
         --h1: calc(var(--h2) * var(--scale));
-        --p: calc(var(--base-font-size) * var(--scale));
+        --p: 1.125rem;
+        --a: 1.125rem;
 
         --font-family: 'Satoshi',
+            'Alpino-Black',
             'Segoe UI',
             'Zodiak',
             Tahoma,
@@ -317,8 +345,6 @@
 
         /************************ LAYOUT SIZES ********************/
         --content-width-blog: 800px;
-        --content-width: 1280px;
-        --side: 2rem;
     }
 
 
@@ -383,7 +409,7 @@
 
     small,
     .text-small {
-        font-size: calc(var(--base-font-size) / var(--scale))
+        font-size: calc(var(--base-font-size) / var(--scale));
     }
 
     p {
@@ -394,7 +420,7 @@
            damit Typografie und Layout konsistent sind.
            2em ist ok, aber "tokenisiert" ist wartbarer.
         */
-        margin-bottom: var(--space-8);
+        margin-block-end: var(--space-8);
     }
 
     a {
@@ -414,7 +440,9 @@
     }
 
     .btn {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background-color: transparent;
 
         /* was: padding: .8rem 1.2rem; -> jetzt tokenisiert */
@@ -423,9 +451,9 @@
         font-size: var(--base-font-size);
         color: var(--color-ld-black-500);
         border: 1px solid var(--color-ld-black-500);
-        border-radius: 4px;
+        border-radius: var(--radius-button);
         cursor: pointer;
-        transition: all var(--transition-base) ease;
+        transition: color, border-color, box-shadow var(--transition-base) ease;
         text-align: center;
 
         /* optional: kleine default elevation */
@@ -434,7 +462,8 @@
         &:hover,
         &:active,
         &:focus {
-            transition: all var(--transition-base) ease;
+            border-color: var(--color-ld-accent-500);
+            color: var(--color-ld-accent-500);
             text-decoration: none;
         }
 
@@ -446,6 +475,12 @@
         &:focus-visible {
             outline: none;
             box-shadow: var(--shadow-focus);
+        }
+        &:disabled{
+            background-color: #dcdcdc2c;
+            text-decoration: line-through;
+            border-color: #dcdcdc97;
+            color: var(--color-ld-black-500);
         }
     }
 
@@ -464,15 +499,15 @@
 
         border: 1px solid var(--color-ld-white-500);
         border-radius: 4px;
-        width: 100%;
+        inline-size: 100%;
         box-sizing: border-box;
         outline: none;
 
         /* was: margin-bottom: 1rem; -> tokenisiert */
-        margin-bottom: var(--space-4);
+        margin-block-end: var(--space-4);
 
         box-shadow: none;
-        transition: all var(--transition-base) ease;
+        transition: border-color, box-shadow var(--transition-base) ease;
         background-color: inherit;
 
         &:focus,
@@ -486,8 +521,6 @@
                -> Nutze Fokus-Token.
             */
             box-shadow: var(--shadow-focus);
-
-            transition: all var(--transition-base) ease;
         }
     }
 
@@ -498,7 +531,7 @@
     input[type="checkbox"] {
         -webkit-appearance: none;
         appearance: none;
-        width: auto;
+        inline-size: auto;
         font-size: 1.5em;
         margin: 0;
         padding: 2px;
@@ -506,8 +539,9 @@
         cursor: pointer;
         border-radius: 5px;
         box-shadow: none;
-        margin-right: var(--space-2);
+        margin-inline-end: var(--space-2);
         border-color: var(--color-ld-black-500);
+        transition: border-color, box-shadow var(--transition-base) ease-in-out;
 
         &:hover,
         &:focus,
@@ -516,8 +550,6 @@
 
             /* Improvement: gleiche Story -> focus token */
             box-shadow: var(--shadow-focus);
-
-            transition: all var(--transition-base) ease-in-out;
         }
     }
 
@@ -527,13 +559,13 @@
     }
 
     [type="checkbox"]::before {
-        width: 20px;
-        height: 20px;
+        inline-size: 20px;
+        block-size: 20px;
         display: flex;
         content: "";
         z-index: 5;
         position: relative;
-        font-size: inherit
+        font-size: inherit;
     }
 
     [type="checkbox"]:checked::before {
@@ -558,8 +590,8 @@
            -> Entfernt. Wenn du padding brauchst, nutz Token.
         */
         user-select: none;
-        transition: all var(--transition-base) ease-in-out;
-        width: fit-content;
+        transition: color var(--transition-base) ease-in-out;
+        inline-size: fit-content;
         margin: 0;
         padding: 0;
 
@@ -572,7 +604,12 @@
         &:active,
         &:focus {
             color: var(--color-ld-accent-500);
-            transition: all var(--transition-base) ease-in-out;
+        }
+    }
+
+    @media (width < 760px) {
+        :root {
+            --scale: 1.15;
         }
     }
 }
@@ -585,8 +622,14 @@
     }
 
     body {
-        width: 100%;
-        height: 100%;
+        inline-size: 100%;
+        block-size: 100%;
+    }
+
+    @media (width < 600px) {
+        :root {
+            --side: 1rem;
+        }
     }
 
     .app {
@@ -595,13 +638,13 @@
         flex-direction: column;
         align-items: center;
         position: relative;
-        min-height: 100svh;
+        min-block-size: 100svh;
 
         /* Improvement: `min-width: nax-content;` ist ein Tippfehler -> invalid.
            Vermutlich war `max-content` gemeint. Aber min-width: max-content kann Layout sprengen.
            Ich lasse es hier bewusst weg. Wenn du was willst: `min-width: 0;` für Flex-Children. */
-        width: 100%;
-        height: 100%;
+        inline-size: 100%;
+        block-size: 100%;
     }
 
     main {
@@ -609,363 +652,90 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        width: 100%;
-        height: 100%;
+        inline-size: 100%;
+        block-size: 100%;
     }
 }
 
-@media (width < 760px) {
-    :root {
-        --scale: 1.15;
+@layer utils {
 
-    }
-}
-
-@media (width < 600px) {
-    :root {
-        --side: 1rem;
-    }
-}
-
-.alert,
-.alert-danger {
-    color: var(--color-alert-danger);
-    text-align: left;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: .8rem;
-    display: flex;
-    align-items: center;
-}
-
-
-.btn-login,
-.btn-logout,
-.btn-signup,
-.btn:has(.btn-signup),
-.btn:has(.btn-logout),
-.btn:has(.btn-login) {
-
-    font-weight: bold;
-    border: 1px solid var(--color-ld-accent-600);
-    background-color: var(--color-ld-accent-600);
-    color: var(--color-ld-white-300);
-
-    &:hover {
-        background-color: var(--color-ld-accent-500);
-        border-color: var(--color-ld-accent-500);
-    }
-}
-
-.btn:has(.btn-signup),
-.btn-signup {
-    background-color: var(--color-ld-accent-700);
-    border: 1px solid var(--color-ld-accent-700);
-
-    &:hover {
-        background-color: var(--color-ld-accent-600);
-        border-color: var(--color-ld-accent-700);
-        color: var(--color-ld-white-500);
-    }
-}
-
-.btn:has(.btn-logout),
-.btn-logout {
-    background-color: transparent;
-    border-color: var(--color-red-700);
-    color: var(--color-red-700);
-
-    &:hover {
-        background-color: var(--color-red-700);
-        border-color: var(--color-red-700);
-        color: var(--color-white-500);
-    }
-}
-
-.btn:has(svg) {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    svg {
-        margin-inline: var(--space-2);
-    }
-}
-
-a:has(svg) {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    svg {
-        margin-inline: var(--space-2);
-    }
-}
-
-
-
-
-
-.copy-button-wrapper {
-    /* was: --border-radius: var(--size-2) var(--size-2) 0 0; */
-    --border-radius: var(--radius-5) var(--radius-5) 0 0;
-    --border-radius-label: var(--radius-2);
-
-    position: relative;
-    margin: 0;
-    padding: var(--space-2);
-
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: space-between;
-    align-self: center;
-
-    width: 100%;
-    max-inline-size: 100%;
-
-    border-radius: var(--border-radius);
-
-    /* was: border-top/left/right with !important + surface tokens not defined in our system */
-    border-top: var(--border-default);
-    border-left: var(--border-default);
-    border-right: var(--border-default);
-
-    /* background was shiki */
-    background-color: var(--shiki-bg, var(--color-ld-white-500));
-    box-sizing: border-box;
-
-    transition: background-color var(--transition-base) ease,
-        border-color var(--transition-base) ease;
-
-    .language-description {
-        margin: 0;
-        display: inline-flex;
-        align-items: center;
-        align-self: center;
-        text-align: center;
-
-        /* was: padding-inline var(--size-1); padding-block 1px; margin-left 5px */
-        padding-inline: var(--space-2);
-        padding-block: 1px;
-        margin-left: var(--space-1);
-
-        /* was: background-color: var(--primary); -> map to accent token */
-        background-color: var(--color-ld-accent-600);
-
-        /* was: font-weight: var(--font-weight-7); -> not defined; choose a stable weight */
-        font-weight: 500;
-
-        font-size: 0.8rem;
-        line-height: 0.9rem;
-        height: 1.2rem;
-
+    .alert,
+    .alert-danger {
+        color: var(--color-alert-danger);
+        text-align: left;
+        font-weight: bold;
         text-transform: uppercase;
-
-        border-radius: var(--border-radius-label);
-
-        /* was: color: var(--shiki-bg); -> usually label text should contrast the label bg */
-        color: var(--color-ld-white-300);
+        font-size: .8rem;
+        display: flex;
+        align-items: center;
     }
 
-    .copy-button {
-        /* tokenized spacing */
-        margin: 0;
+    .btn-login,
+    .btn-logout,
+    .btn-signup,
+    .btn:has(.btn-signup),
+    .btn:has(.btn-logout),
+    .btn:has(.btn-login) {
 
+        font-weight: bold;
+        border: 1px solid var(--color-ld-accent-600);
+        background-color: var(--color-ld-accent-600);
+        color: var(--color-ld-white-300);
+
+        &:hover {
+            background-color: var(--color-ld-accent-500);
+            border-color: var(--color-ld-accent-500);
+        }
+    }
+
+    .btn:has(.btn-signup),
+    .btn-signup {
+        background-color: var(--color-ld-accent-700);
+        border: 1px solid var(--color-ld-accent-700);
+
+        &:hover {
+            background-color: var(--color-ld-accent-600);
+            border-color: var(--color-ld-accent-700);
+            color: var(--color-ld-white-500);
+        }
+    }
+
+    .btn:has(.btn-logout),
+    .btn-logout {
         background-color: transparent;
-        border: none;
+        border-color: var(--color-red-700);
+        color: var(--color-red-700);
 
-        display: inline-flex;
-        align-items: center;
+        &:hover {
+            background-color: var(--color-red-700);
+            border-color: var(--color-red-700);
+            color: var(--color-white-500);
+        }
+    }
+
+    .btn:has(svg) {
+        flex: 1;
+        display: flex;
         justify-content: center;
-        max-width: 50px;
-        cursor: pointer;
-
-        /* keep consistent with controls */
-        border-radius: var(--radius-control);
-
-        outline: none;
-        box-shadow: none;
-
-        transition: transform var(--transition-base) ease,
-            box-shadow var(--transition-base) ease;
-
-        &:active {
-            transform: translateY(1px);
-        }
-
-        &:focus-visible {
-            box-shadow: var(--shadow-focus);
-        }
+        align-items: center;
 
         svg {
-            display: block;
-
-            fill: transparent;
-
-            /* was: stroke: var(--primary); -> map to accent */
-            stroke: var(--color-ld-accent-500);
-            stroke-width: 2px;
-
-            height: 1.5rem;
-            width: 1.5rem;
-
-            margin: 0;
-            padding: 0;
-
-            /* Only apply if you really need it for shiki contrast */
-            background-color: transparent;
-
-            transition: stroke var(--transition-base) ease;
+            margin-inline: var(--space-2);
         }
+    }
 
-        &:hover svg {
-            /* was: stroke var(--surface-1); then overwritten by var(--accent) -> now single source */
-            stroke: var(--color-ld-accent-600);
-        }
+    a:has(svg) {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-        /* If you want icons to blend into the shiki header background explicitly: */
-        .shiki & svg {
-            background-color: var(--shiki-bg, transparent);
+        svg {
+            margin-inline: var(--space-2);
         }
     }
 }
 
+@layer components {}
 
-
-
-
-
-
-
-
-
-.blog-post {
-
-
-    width: 100%;
-
-    /* Improvement:
-     --text-1 existiert bei dir nicht. Ich mappe auf den normalen Text-Token. */
-    p {
-        color: var(--color-ld-black-500);
-    }
-
-    /* was: margin-top: 2.5rem; -> tokenisiert */
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        margin-top: var(--space-10);
-        /* 40px */
-    }
-
-    img {
-        width: 100%;
-        max-inline-size: 100%;
-        max-block-size: 100%;
-        height: auto;
-        object-fit: contain;
-        object-position: center;
-        box-sizing: border-box;
-
-        /* was: border-radius: 10px; -> tokenisiert */
-        border-radius: var(--radius-card);
-
-        /* was: box-shadow:--shadow-md; -> fixed */
-        box-shadow: var(--shadow-md);
-
-        /* was: margin-top/bottom: 2rem; -> tokenisiert */
-        margin-block: var(--space-8);
-    }
-
-    .codesandbox,
-    .video,
-    .website {
-        width: 100%;
-        max-inline-size: 100%;
-        align-self: center;
-        height: 600px;
-        box-sizing: border-box;
-
-        /* was: var(--size-*) -> replaced with our spacing/radius tokens */
-        margin-bottom: var(--space-6);
-
-        /* duplicated radius removed */
-        border-radius: var(--radius-card);
-
-        /* was: var(--shadow-5) -> map to your defined tokens */
-        box-shadow: var(--shadow-md);
-
-        /* was: var(--animation-time) -> map to your transitions */
-        transition: all var(--transition-base) ease-in-out;
-
-        /* Optional improvement:
-       Iframes/videos often need overflow hidden for rounded corners to actually clip. */
-        overflow: hidden;
-        background: var(--surface-2);
-        border: var(--border-default);
-    }
-
-    /* Blog lists should look like lists.
-     Your global reset kills list-style; restore it inside blog-post.
-     (If you intentionally want no bullets, remove these 2 blocks.) */
-    ul,
-    ol {
-        padding-inline-start: var(--space-6);
-        margin-bottom: var(--space-6);
-    }
-
-    li {
-        list-style: revert;
-        margin-bottom: var(--space-2);
-    }
-}
-
-
-/* Shiki code block */
-.shiki {
-    width: 100%;
-    max-inline-size: 100%;
-    align-self: center;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-
-    /* was: border-radius: 0 0 var(--size-2) ... -> now with radius token */
-    border-radius: 0 0 var(--radius-5) var(--radius-5);
-    overflow: hidden;
-
-    /* was: var(--shadow-5) -> map */
-    box-shadow: var(--shadow-md);
-
-    /* was: explicit borders with color -> use border tokens */
-    border-left: var(--border-default);
-    border-right: var(--border-default);
-    border-bottom: var(--border-default);
-
-    font-size: 0.9rem;
-    transition: all var(--transition-base) ease-in-out;
-
-    code {
-        width: 100%;
-        max-width: 100%;
-        max-inline-size: 100%;
-        overflow-x: auto;
-        display: block;
-        transition: all var(--transition-base) ease-in-out;
-        margin: 0;
-        padding: 0;
-        padding-inline-start: var(--space-4);
-        padding-bottom: var(--space-3);
-        background-color: var(--color-ld-white-500);
-    }
-
-}
-
-.markdown-image.hero-image {
-  /* for the blog hero image */
-}
+@layer blog{}

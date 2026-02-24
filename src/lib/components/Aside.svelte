@@ -66,7 +66,7 @@
 <nav
     bind:this={navElement}
     {...props}
-    class="aside-nav"
+    class="nav-aside"
     tabindex="-1"
     class:left={direction === "left"}
     class:right={direction === "right"}
@@ -82,9 +82,9 @@
             }
         }}><LucideX size="1rem"></LucideX></button
     >
-    <ul class="aside-nav-items">
+    <ul class="nav-aside-items">
         {#each routes as route}
-            <NavigationItem classPrefix="aside-" {route} {@attach onClickLI}></NavigationItem>
+            <NavigationItem className="nav-aside" {route} {@attach onClickLI}></NavigationItem>
         {/each}
     </ul>
     {@render extra?.()}

@@ -1,76 +1,178 @@
-name:
-  CI / Deploy
-
-# ─── TRIGGERS ────────────────────────────────────────────────────────────────
-# This workflow runs in two situations:
-#   1. On every push to main and every pull request targeting main → runs CI only
-#   2. On every git tag starting with "prod-" (e.g. prod-2025-001) → runs CI + deploy
+name: CI / Deploy (SvelteKit adapter-cloudflare, tag-gated)
 
 on:
   push:
     branches: [main]
     tags:
+      - "dev-*"
       - "prod-*"
   pull_request:
-    branches: [main]
-    
-# ─── CI JOB ──────────────────────────────────────────────────────────────────
-# Runs on every push, PR, and tag push.
-# Checks types, runs tests, and verifies the build compiles without errors.
-# If any step fails, the workflow stops and deploy never runs.
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   ci:
+    name: CI (typecheck, test, build)
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout (full history for ancestry guardrails)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
-        
-      - name: Type check
+
+      - name: Typecheck
         run: npm run check
 
-      - name: Run unit tests
+      - name: Unit tests
         run: npm run test
 
-      - name: Build app
+      - name: Build (adapter-cloudflare)
         run: npm run build
+        env:
+          VITE_VERSION: ${{ github.ref_name }}
 
-  # ─── DEPLOY JOB ──────────────────────────────────────────────────────────────
-  # Only runs when:
-  #   - The CI job above passed (needs: ci)
-  #   - The trigger was a tag push starting with "prod-" (not a branch push or PR)
-  #
-  # To deploy: git tag prod-2025-001 && git push origin prod-2025-001
+      - name: Sanity check build output
+        run: |
+          set -euo pipefail
+          test -f .svelte-kit/cloudflare/_worker.js
+          test -f .svelte-kit/output/server/index.js
+          test -f .svelte-kit/cloudflare-tmp/manifest.js
+          echo "OK: build produced .svelte-kit/cloudflare/_worker.js"
 
-  deploy:
+      - name: Upload build artifact (tag runs only)
+        if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/tags/prod-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-build
+          path: .svelte-kit
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy_dev:
+    name: Deploy DEV (workers.dev)
+    needs: ci
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/dev-')
+    environment:
+      name: dev
+
+    steps:
+      - name: Checkout (for guardrail + wrangler config)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+
+      - name: Guardrail dev tag must be on dev branch
+        run: |
+          set -euo pipefail
+          git fetch origin --prune +refs/heads/dev:refs/remotes/origin/dev
+          if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/dev"; then
+            echo "OK: tag commit is contained in origin/dev"
+          else
+            echo "ERROR: dev tag commit is NOT contained in origin/dev"
+            git branch -r --contains "${GITHUB_SHA}" || true
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Download build artifact (overlay into repo root)
+        uses: actions/download-artifact@v4
+        with:
+          name: cf-build
+          path: .svelte-kit
+
+      - name: Sanity check artifact
+        run: |
+          set -euo pipefail
+          test -f .svelte-kit/cloudflare/_worker.js
+          echo "OK: artifact contains expected worker entry"
+
+      - name: Install dependencies (Wrangler from devDependencies)
+        run: npm ci
+
+      - name: Deploy to DEV
+        run: npx wrangler deploy --env="" --config wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  deploy_prod:
+    name: Deploy PROD (alau.at)
     needs: ci
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/prod-')
-    steps:
-      - uses: actions/checkout@v4
+    environment:
+      name: production
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout (for guardrail + wrangler config)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+
+      - name: Guardrail prod tag must be on main branch
+        run: |
+          set -euo pipefail
+          git fetch origin --prune +refs/heads/main:refs/remotes/origin/main
+          if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/main"; then
+            echo "OK: tag commit is contained in origin/main"
+          else
+            echo "ERROR: prod tag commit is NOT contained in origin/main"
+            git branch -r --contains "${GITHUB_SHA}" || true
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: 'npm'
-        
-      - name: Install dependencies
-        run: npm ci    
-      
-      - name: Build app
-        run: npm run build
-        env:
-          VITE_VERSIONS: ${{ github.ref_name }}
+          cache: "npm"
 
-      - name: Deploy to Cloudflare
-        run: npx wrangler deploy
+      - name: Download build artifact (overlay into repo root)
+        uses: actions/download-artifact@v4
+        with:
+          name: cf-build
+          path: .svelte-kit
+
+      - name: Sanity check artifact
+        run: |
+          set -euo pipefail
+          test -f .svelte-kit/cloudflare/_worker.js
+          echo "OK: artifact contains expected worker entry"
+
+      - name: Install dependencies (Wrangler from devDependencies)
+        run: npm ci
+
+      - name: Deploy to PROD
+        run: npx wrangler deploy --env production --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
