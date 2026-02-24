@@ -106,7 +106,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cf-build
-          path: .
+          path: .svelte-kit
 
       - name: Sanity check artifact
         run: |
@@ -160,7 +160,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cf-build
-          path: .
+          path: .svelte-kit
 
       - name: Sanity check artifact
         run: |
