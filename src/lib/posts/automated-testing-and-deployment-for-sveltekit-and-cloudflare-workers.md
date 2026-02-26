@@ -19,7 +19,5 @@ image: '/img/bp1_small.png'
 </script>
 
 ## Foreword
-In the company I work, I had the request to show the tag of the latest deployment in the application.
-The flow is push to the repo either on the production or the development branch. 
-Then create a tag 
+I recently got to clean up and update a legacy application at work. One requirement sounded deceptively simple: we needed to display the git tag of the most recent production deployment inside the app. It wasn’t trivial, though. First I had to understand how our GitHub Actions pipeline actually deploys, and then figure out how to inject the deploy tag into the build so the app can expose it at runtime. Since I’d never built a CI/CD pipeline myself, this turned into a deep dive into automated deployments, Git, and GitHub. In this post, I’ll share what I learned by walking through a simple GitHub Actions CI/CD pipeline and how to inject the deployment tag into the build. 
 
