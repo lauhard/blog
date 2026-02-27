@@ -32,8 +32,8 @@
     data-route-name={route.name}
     {...props}
 >
-    <a class="nav-link " href={resolve(route.path as any)}>
+    <a class="nav-link" href={resolve(route.path as any)}>
         {@render GetIconFromRoute(route)}
-        {route.name}
+        <span class="link-text">{route.name}</span>
     </a>
 </li>
