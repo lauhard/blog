@@ -39,49 +39,89 @@
 </script>
 
 <div class="wrapper">
+    
+    <div>
+        {@render children()}
+    </div>
     <menu>
-        <NavigationItem route={prevRoute}></NavigationItem>
-        <NavigationItem route={nextRoute} className="nav-link-right"
-        ></NavigationItem>
+        {#if prevRoute?.name != ""}
+            <NavigationItem route={prevRoute} className=""></NavigationItem>
+        {/if}
+        {#if nextRoute?.name != ""}
+            <NavigationItem route={nextRoute} className="nav-item-right"
+            ></NavigationItem>
+        {/if}
     </menu>
-    {@render children()}
 </div>
 
 <style>
     .wrapper {
         display: flex;
         flex-direction: column;
-        @media (width < 1100px) {
-            flex-direction: column-reverse;
-        }
+        
     }
     menu {
         margin: 0;
         padding: 0;
         width: 100%;
-        position: sticky;
-        top: 0px;
         z-index: 300;
         display: flex;
         justify-content: space-between;
         align-items: center;
         min-height: 80px;
         height: auto;
-        background-color: var(--color-ld-white-300);
-        @media (width < 1100px) {
-            position: relative;
-        }
+        background-color: var(--color-ld-white-400);
+        margin-block: .5rem;
+        border-radius: 1rem;
+
+    }
+    :global(.nav-item) {
+        width: 50%;
+        display: flex;
+        flex: 1;
+        
     }
     :global(.nav-link) {
-        @media (width < 800px) {
-            max-width: 200px;
-        }
+        width: 50%;
+        display: flex;
+        max-height: 80px;
+        flex: 1;
+        justify-content: flex-start;
     }
-    :global(.nav-link-right > a) {
+    :global(.nav-item-right > a) {
         display: flex;
         flex-direction: row-reverse;
+        text-align: right;
     }
-    :global(.nav-link-right > a:has(svg) > svg) {
-        min-width: 35px;
+    :global(.nav-item > a:has(svg) > svg) {
+        min-width: 45px;
+        min-height: 45px;
+        padding: 0.6rem;
+        margin-inline: 1rem;
+        border-radius: 100%;
+        background-color: var(--color-ld-accent-500);
+        color: var(--color-ld-white-600);
+        border: 4px var(--color-ld-accent-600) solid;
+    }
+
+    :global(.nav-item:hover a > svg) {
+        color: var(--color-ld-accent-700);
+    }
+   
+    @media (width < 800px) {
+        :global(.nav-link) {
+            text-align: normal;
+        }
+        :global(.nav-item-right) {
+            justify-content: end;
+        }
+    }
+    @media (width < 600px) {
+        :global(.nav-link) {
+            justify-content: space-between;
+        }
+        :global(.link-text) {
+            display: none;
+        }
     }
 </style>
