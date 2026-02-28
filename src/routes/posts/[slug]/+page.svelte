@@ -10,6 +10,8 @@
     let post = $derived(data?.post);
 </script>
 
+<h2 class="heading">{metadata.title}</h2>
+
 <div class="hero">
     {#if metadata?.image}
         <Image
@@ -21,7 +23,6 @@
         ></Image>
     {/if}
     <div class="metadata">
-        <h2 class="heading">{metadata.title}</h2>
         <p class="excerpt">{metadata.excerpt}</p>
         <p>
             <span class="descr">Published</span>
@@ -73,24 +74,25 @@
 <style lang="scss">
     .heading {
         font-weight: 900;
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
         text-wrap: pretty;
+        text-align: center;
     }
     .hero {
-        border: 0.5px solid #5658565a;
         border-radius: 1rem;
         .metadata {
             padding: 0 1rem 1rem 1rem;
+            margin-top: 2rem;
             p {
                 color: var(--text-1);
                 margin: 0;
-                font-size: calc(0.8rem * var(--scale));
-                line-height: calc(1.25rem * var(--scale));
-                font-weight: 800;
+                font-size: calc(0.7rem * var(--scale));
+                line-height: calc(1.1rem * var(--scale));
+                font-weight: 500;
 
                 .descr {
                     text-transform: uppercase;
-                    width: 7rem;
+                    width: 6.5rem;
                     display: inline-block;
                 }
                 .value {
@@ -101,10 +103,11 @@
             .excerpt {
                 margin-bottom: 2rem;
                 // padding-left: 2rem;
-                font-size: calc(1rem * var(--scale));
-                line-height: calc(1.8rem * var(--scale));
+                font-size: var(--p);
+                line-height: calc(1.6rem * var(--scale));
                 font-style: italic;
                 font-weight: 500;
+                padding: 0.5rem 1rem;
             }
             .categories {
                 display: flex;
@@ -126,7 +129,8 @@
                         border-radius: 1rem;
                         border: 3px solid var(--color-ld-accent-600);
                         box-sizing: border-box;
-                        color: var(--color-ld-accent-700);
+                        color: var(--color-ld-white-400);
+
                         font-weight: 900;
                         &::after {
                             content: ",";
@@ -139,7 +143,7 @@
                         &:first-of-type {
                         }
                         &:hover {
-                            color: var(--color-ld-white-500);
+                            color: var(--color-ld-accent-700);
                         }
                     }
 
