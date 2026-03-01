@@ -2,7 +2,7 @@ name: CI / Deploy (SvelteKit adapter-cloudflare, tag-gated)
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     tags:
       - "dev-*"
       - "prod-*"
@@ -30,6 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -46,10 +47,14 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      - name: Resolve version
+        id: version
+        run: echo "value=$(git describe --tags --always)" >> $GITHUB_OUTPUT
+
       - name: Build (adapter-cloudflare)
         run: npm run build
         env:
-          VITE_VERSION: ${{ github.ref_name }}
+          VITE_VERSION: ${{ steps.version.outputs.value }}
 
       - name: Sanity check build output
         run: |
@@ -59,8 +64,8 @@ jobs:
           test -f .svelte-kit/cloudflare-tmp/manifest.js
           echo "OK: build produced .svelte-kit/cloudflare/_worker.js"
 
-      - name: Upload build artifact (tag runs only)
-        if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/tags/prod-')
+      - name: Upload build artifact
+        if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/tags/prod-') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/dev')
         uses: actions/upload-artifact@v4
         with:
           name: cf-build
@@ -73,7 +78,7 @@ jobs:
     name: Deploy DEV (workers.dev)
     needs: ci
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/dev-')
+    if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/heads/dev')
     environment:
       name: dev
 
@@ -127,7 +132,7 @@ jobs:
     name: Deploy PROD (alau.at)
     needs: ci
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/prod-')
+    if: startsWith(github.ref, 'refs/tags/prod-') || startsWith(github.ref, 'refs/heads/main')
     environment:
       name: production
 
