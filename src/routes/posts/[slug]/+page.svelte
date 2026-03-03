@@ -72,13 +72,16 @@
         }
 
         .metadata {
-            font-size: calc(1rem * var(--scale));
-            font-weight: 500;
             display: flex;
             width: 100%;
             text-align: center;
             flex: 1;
             justify-content: center;
+            font-size: calc(.9rem * var(--scale));
+
+        }
+        .published{
+            font-size: calc(1.1rem * var(--scale));
         }
     }
 

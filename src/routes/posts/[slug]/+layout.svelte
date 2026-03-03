@@ -89,6 +89,9 @@
         max-height: 80px;
         flex: 1;
         justify-content: flex-start;
+        font-weight: normal;
+        line-height: 1.6rem;
+        
     }
     :global(.nav-item-right > a) {
         display: flex;
@@ -101,9 +104,8 @@
         padding: 0.6rem;
         margin-inline: 1rem;
         border-radius: 100%;
-        background-color: var(--color-ld-accent-500);
-        color: var(--color-ld-white-600);
-        border: 4px var(--color-ld-accent-600) solid;
+        color: var(--color-ld-black-500);
+        border: 1px var(--color-ld-accent-600) solid;
     }
 
     :global(.nav-item:hover a > svg) {

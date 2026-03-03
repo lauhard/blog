@@ -3,7 +3,6 @@
 </script>
 <footer>
     <p> &copy; 2026 by ALau</p>
-    <span>Version: {app_verson}</span>
 </footer>
 
 <style>
