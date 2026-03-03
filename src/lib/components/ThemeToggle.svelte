@@ -63,17 +63,17 @@
             justify-content: center;
             align-items: center;
             padding: 0;
-            height: 35px;
-            min-height: 35px;
-            min-width: 35px;
-            width: 35px;
+            height: 30px;
+            min-height: 30px;
+            min-width: 30px;
+            width: 30px;
             border-radius: 50%;
             z-index: 100;
             opacity: 5%;
             position: absolute;
             background-color: var(--color-ld-accent-500);
             color: var(--color-black-500);
-            left: -10%;
+            left: 0%;
             transition:
                 left 300ms ease-in-out,
                 opacity 300ms ease-in-out;
@@ -83,7 +83,7 @@
     .btn-theme:has(.theme-light.active) {
         .theme-light,
         .theme-dark {
-            left: -7%;
+            left: 0%;
             opacity: 100%;
         }
         .theme-dark {
@@ -93,7 +93,7 @@
     .btn-theme:has(.theme-dark.active) {
         .theme-light,
         .theme-dark {
-            left: 45%;
+            left: 50%;
             opacity: 100%;
         }
         .theme-light {

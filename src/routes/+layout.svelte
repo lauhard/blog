@@ -4,7 +4,10 @@
 	import Navigation from "$lib/components/Navigation.svelte";
 	import { routes } from "$lib/routes";
 	import Footer from "$lib/components/Footer.svelte";
-    import { page } from "$app/state";
+	import { page } from "$app/state";
+    import ThemeToggle from "$lib/components/ThemeToggle.svelte";
+    import { LucideWrench } from "lucide-svelte";
+	let app_verson = import.meta.env.VITE_VERSION ?? "local.dev";
 	let { children } = $props();
 </script>
 
@@ -15,11 +18,26 @@
 <div class="app">
 	<header>
 		<a href="/"> <h1>alau.at</h1></a>
-		{#if page.params.slug}
-			<a class="btn-posts" href="/posts">Back to Posts</a>
-			 <!-- content here -->
-		{/if}
+		<button
+			id="menu-anchor"
+			popovertarget="popover-menu"
+			class="btn btn-menu">
+			<LucideWrench ></LucideWrench>
+			</button
+		>
 	</header>
+	<menu id="popover-menu" popover>
+		<ul>
+			<li class="theme-toggle">
+				<ThemeToggle></ThemeToggle>
+				<span>Theme-Switch</span>
+			</li>
+		</ul>
+		<div class="menu-footer">
+			<span>Version:</span><span>{app_verson}</span>
+		</div>
+	</menu>
+
 	<main>
 		{@render children()}
 	</main>
@@ -27,6 +45,65 @@
 </div>
 
 <style>
+	#menu-anchor {
+		anchor-name: --menu-anchor;
+		
+		border: 1px solid var(--color-ld-white-500);
+		margin-block: 1rem;
+		max-width: 50px;
+		width: 50px;
+		height: 50px;
+		padding: 0px;
+		@media (width < 600px){
+			max-width: 45px;
+		width: 45px;
+		height: 45px;
+		padding: 2px;
+		}
+		margin-inline-end: 1.5rem;
+		border-radius: 50px;
+	}
+	#popover-menu {
+		position-anchor: --menu-anchor;
+		position: fixed;
+		inset: auto;
+		top: anchor(bottom);
+		right: anchor(right);
+		margin: 0;
+		padding: 0;
+		margin-top: .5rem;
+		min-width: 200px;
+		min-height: 300px;
+		border: 1px solid var(--color-ld-white-400);
+		border-radius: 10px;
+		background-color: var(--color-ld-white-300);
+		box-shadow: var(--shadow-md);
+		ul{
+				width: 100%;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				padding: 1rem;
+				li{
+					min-height: 2rem;
+				}
+			}
+			.theme-toggle{
+				display: flex;
+				flex-direction: row;
+				justify-content: space-around;
+				gap: 1rem;
+			}
+		.menu-footer{
+			position: absolute;
+			bottom: 0;
+			padding: .5rem 1rem;
+			
+			span:last-of-type{
+				margin-left: .5rem;
+			}
+		}
+	}
 	.app {
 		position: relative;
 		height: auto;
@@ -40,7 +117,7 @@
 			width: 100%;
 			z-index: 100;
 			background-color: var(--color-ld-white-300);
-			a{
+			a {
 				height: 100%;
 				display: flex;
 				justify-content: center;
@@ -53,12 +130,6 @@
 				font-family: "Alpino-Bold";
 				color: var(--color-ld-accent-500);
 				font-size: 2rem;
-			}
-			.btn-posts{
-				height: 2.5rem;
-				display: flex;
-				align-self: center;
-				margin-right: 1rem;
 			}
 		}
 		main {

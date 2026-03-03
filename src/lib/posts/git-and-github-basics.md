@@ -44,13 +44,6 @@ When you create a new branch, Git does not copy your whole project.
 Instaed it is putting a second pointer on the same commit as your current branch at the time.
 You can think of it like putting a second label to the commit the current branch name is pointing to.
 
-``` js
-
-console.log("test";
-
-
-```
-
 For example, you want to work on a new feature in your project but you don’t want to mess up your main branch.
 You create a feature branch like `feature/login` and you switch or checkout that branch.
 When you now create a new commit, only the branch pointer `feature/login` moves forward to the latest commit. The branch pointer `main` stays behind. 
