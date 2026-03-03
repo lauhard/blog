@@ -5,7 +5,8 @@ Hosted on Cloudflare Workers with a D1 database.
 Switching between local sqlite database remote D1 using Drizzle ORM.'
 
 author: 'Andreas Launard'
-created: 'Feb 21, 2026'
+created: 'February 21, 2026'
+updated: 'February 21, 2026'
 categories:
     - svelte
     - cloudflare

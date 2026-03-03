@@ -1,24 +1,38 @@
 .blog-post {
     inline-size: 100%;
+
     /* Improvement:
      --text-1 existiert bei dir nicht. Ich mappe auf den normalen Text-Token. */
     p {
         color: var(--color-ld-black-500);
         font-size: var(--p);
     }
-    ul, li, a{
+
+    ul,
+    li,
+    a {
         font-size: var(--p);
     }
 
     /* was: margin-top: 2.5rem; -> tokenisiert */
+    h1,
     h2,
     h3,
     h4,
     h5,
     h6 {
+        
         margin-block-start: var(--space-10);
+        margin-left: 2rem;
         font-weight: 900;
+        color:var(--color-ld-accent-500);
         /* 40px */
+        &::before{
+            display: block;
+            content: "#";
+            position: absolute;
+            left:1.5rem;
+        }
     }
 
     img {
@@ -80,6 +94,22 @@
     li {
         list-style: revert;
         margin-block-end: var(--space-2);
+    }
+
+    p>code {
+        overflow-x: auto;
+        transition: all var(--transition-base) ease-in-out;
+        margin: 0;
+        padding: 0;
+        padding-inline: var(--space-2);
+        padding-block: var(--space-1);
+        background-color: var(--color-ld-white-400);
+        color:var(--color-ld-black-600);
+        border-radius: var(--radius-3);
+        &:hover{
+            background-color: var(--color-ld-accent-500);
+            color:var(--color-ld-white-500);
+        }
     }
 
     .copy-button-wrapper {
@@ -149,7 +179,7 @@
 
             background-color: transparent;
             border: none;
-            max-width:max-content;
+            max-width: max-content;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -226,10 +256,11 @@
         border-inline-end: var(--border-default);
         border-block-end: var(--border-default);
 
-        font-size: 0.9rem;
         transition: background-color, border-color var(--transition-base) ease-in-out;
+        margin-bottom: 2rem;
 
-        code {
+        code
+        {
             inline-size: 100%;
             max-inline-size: 100%;
             overflow-x: auto;
@@ -239,7 +270,7 @@
             padding: 0;
             padding-inline-start: var(--space-4);
             padding-block-end: var(--space-3);
-            background-color: var(--color-ld-white-500);
+
         }
     }
 }
