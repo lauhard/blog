@@ -16,6 +16,8 @@
             nextPost: { slug: string; title: string };
         };
     } = $props();
+
+    console.log("data", data)
     let prevRoute = $derived<Route>({
         path: data.prevPost?.slug ?? "",
         name: data.prevPost?.title ?? "",
@@ -71,9 +73,9 @@
         min-height: 80px;
         height: auto;
         background-color: var(--color-ld-white-400);
-        margin-block: .5rem;
+        margin-top: 2rem;
+        margin-bottom:.5rem;
         border-radius: 1rem;
-
     }
     :global(.nav-item) {
         width: 50%;

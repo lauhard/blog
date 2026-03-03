@@ -325,7 +325,7 @@
         --h3: calc(var(--h4) * var(--scale));
         --h2: calc(var(--h3) * var(--scale));
         --h1: calc(var(--h2) * var(--scale));
-        --p: 1.125rem;
+        --p: calc(var(--base-font-size) * var(--scale));
         --a: 1.125rem;
 
         --font-family: 'Satoshi',
@@ -414,6 +414,7 @@
 
     p {
         font-size: var(--p);
+        font-weight: 500;
 
         /* Improvement:
            Du kannst margin-bottom über Spacing-Tokens steuern,
