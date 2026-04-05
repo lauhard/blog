@@ -221,6 +221,7 @@
         --color-black-700: #565656;
         --color-black-600: #4e4e4e;
         --color-black-500: #3b3b3b;
+        --color-black-480: #303030;
         --color-black-400: #1a1a1a;
         --color-black-300: #0d0d0d;
 
@@ -327,6 +328,7 @@
         --h1: calc(var(--h2) * var(--scale));
         --p: calc(var(--base-font-size) * var(--scale));
         --a: calc(var(--base-font-size) * var(--scale));
+        --span: calc(.9rem * var(--scale));
 
         --font-family: 'Satoshi',
             'Alpino-Black',
@@ -351,7 +353,7 @@
 
 
     body {
-        background-color: var(--color-ld-white-300);
+        background-color: var(--color-ld-white-400);
         color: var(--color-ld-black-500);
         font-family: var(--font-family);
         font-size: var(--base-font-size);
@@ -414,7 +416,6 @@
 
     p {
         font-size: var(--p);
-        font-weight: 500;
 
         /* Improvement:
            Du kannst margin-bottom über Spacing-Tokens steuern,
@@ -428,7 +429,6 @@
         color: var(--color-ld-black-500);
         font-size: var(--a);
         font-family: 'Satoshi';
-        font-weight: 500;
 
         &:hover {
             text-decoration: underline;
@@ -436,7 +436,7 @@
         }
     }
     span{
-        font-size: var(--p);
+        font-size: var(--span);
     }
 
     button {
@@ -737,6 +737,9 @@
         svg {
             margin-inline: var(--space-2);
         }
+    }
+    .three-d-border{
+        
     }
 }
 
