@@ -6,7 +6,7 @@
 	import Footer from "$lib/components/Footer.svelte";
 	import { page } from "$app/state";
     import ThemeToggle from "$lib/components/ThemeToggle.svelte";
-    import { LucideWrench } from "lucide-svelte";
+    import { LucideCog, LucideWrench } from "lucide-svelte";
 	let app_verson = import.meta.env.VITE_VERSION ?? "local.dev";
 	let { children } = $props();
 </script>
@@ -22,7 +22,7 @@
 			id="menu-anchor"
 			popovertarget="popover-menu"
 			class="btn btn-menu">
-			<LucideWrench ></LucideWrench>
+			<LucideCog></LucideCog>
 			</button
 		>
 	</header>
@@ -30,7 +30,7 @@
 		<ul>
 			<li class="theme-toggle">
 				<ThemeToggle></ThemeToggle>
-				<span>Theme-Switch</span>
+				<span>Dark Mode</span>
 			</li>
 		</ul>
 		<div class="menu-footer">
@@ -56,9 +56,9 @@
 		padding: 0px;
 		@media (width < 600px){
 			max-width: 45px;
-		width: 45px;
-		height: 45px;
-		padding: 2px;
+			width: 45px;
+			height: 45px;
+			padding: 2px;
 		}
 		margin-inline-end: 1.5rem;
 		border-radius: 50px;
@@ -74,9 +74,9 @@
 		margin-top: .5rem;
 		min-width: 200px;
 		min-height: 300px;
-		border: 1px solid var(--color-ld-white-400);
+		background-color: var(--color-ld-white-400);
+		border: 1px solid var(--color-ld-accent-500);
 		border-radius: 10px;
-		background-color: var(--color-ld-white-300);
 		box-shadow: var(--shadow-md);
 		ul{
 				width: 100%;
@@ -116,7 +116,7 @@
 			height: var(--header-height);
 			width: 100%;
 			z-index: 100;
-			background-color: var(--color-ld-white-300);
+			background-color: var(--color-ld-white-400);
 			a {
 				height: 100%;
 				display: flex;
@@ -126,10 +126,10 @@
 			}
 			h1 {
 				margin: 0;
-				margin-inline: 2rem;
-				font-family: "Alpino-Bold";
+				margin-inline: 1.5rem;
+				font-family: "Alpino-Light", sans-serif;
 				color: var(--color-ld-accent-500);
-				font-size: 2rem;
+				font-size: 1.7rem;
 			}
 		}
 		main {

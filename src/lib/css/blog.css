@@ -4,8 +4,8 @@
     /* Improvement:
      --text-1 existiert bei dir nicht. Ich mappe auf den normalen Text-Token. */
     p {
-        color: var(--color-ld-black-500);
         font-size: var(--p);
+        text-wrap: pretty;
     }
 
     ul,
@@ -104,8 +104,11 @@
         padding-inline: var(--space-2);
         padding-block: var(--space-1);
         background-color: var(--color-ld-white-400);
-        color:var(--color-ld-black-600);
+        color:var(--color-ld-black-700);
         border-radius: var(--radius-3);
+        font-size: var(--span);
+        background-color: var(--color-ld-white-600);
+        letter-spacing: 0;
         &:hover{
             background-color: var(--color-ld-accent-500);
             color:var(--color-ld-white-500);

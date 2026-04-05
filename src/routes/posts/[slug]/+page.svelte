@@ -26,9 +26,6 @@
         <div class="freshness"></div>
         <div class="reading-time"></div>
     </div> -->
-</div>
-
-<div class="hero">
     {#if metadata?.image}
         <Image
             src={metadata?.image}
@@ -38,7 +35,6 @@
             height={"auto"}
         ></Image>
     {/if}
-    <div class="excerpt">{metadata.excerpt}</div>
 </div>
 
 {#if headings}
@@ -57,10 +53,9 @@
         flex-direction: column;
         justify-content: center;
         position: relative;
-        margin-bottom: 5rem;
         .heading {
             font-weight: 900;
-            text-wrap: pretty;
+            text-wrap: balance;
             text-align: center;
             justify-self: center;
             align-self: center;
@@ -68,7 +63,12 @@
             width: fit-content;
             height: fit-content;
             max-width: 80%;
-            color:var(--color-ld-accent-500);
+            color: var(--color-ld-accent-500);
+            @media (width < 600px) {
+                max-width: 100%;
+                text-wrap: pretty;
+
+            }
         }
 
         .metadata {
@@ -77,43 +77,15 @@
             text-align: center;
             flex: 1;
             justify-content: center;
-            font-size: calc(.9rem * var(--scale));
-
+            font-size: calc(0.9rem * var(--scale));
         }
-        .published{
+        .published {
             font-size: calc(1.1rem * var(--scale));
         }
-    }
-
-    .hero {
-        border-radius: 1rem;
-        .excerpt {
-            display: flex;
-            justify-self: center;
-            height: max-content;
-            max-width: 90%;
-            margin-bottom: 5rem;
-            padding: 0.5rem 1rem;
-            // padding-left: 2rem;
-            font-size: var(--p);
-            line-height: calc(1.6rem * var(--scale));
-            font-style: italic;
-            font-weight: 500;
-            &::before {
-                content: "";
-                margin-right: 2rem;
-                min-width: 5px;
-                max-width: 5px;
-                width: 5px;
-                display: block;
-                background-color: var(--color-ld-accent-500);
-                border-radius: 25px;
-                margin-bottom: 1rem;
-                margin-top: 1rem;
-            }
+        .author {
+            margin-bottom: var(--space-8);
         }
     }
-   
 
     :global(.hero-image) {
         border-radius: 1rem;
