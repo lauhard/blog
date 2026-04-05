@@ -6,17 +6,20 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "npm run build && wrangler dev",
+		"preview": "npm run build && wrangler dev --config wrangler.jsonc",
+		"preview:prod": "npm run build && wrangler dev --env production --config wrangler.jsonc",
 		"prepare": "svelte-kit sync || echo ''",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types ./src/worker-configuration.d.ts",
-		"git-push:main": "git push origin main && gh run watch",
-		"deploy-tag:dev": "git fetch origin dev --prune --tags && git tag -a \"$npm_config_tag\" origin/dev -m \"$npm_config_tag\" && git push origin \"$npm_config_tag\"",
-    	"deploy-tag:prod": "git fetch origin main --prune --tags && git tag -a \"$npm_config_tag\" origin/main -m \"$npm_config_tag\" && git push origin \"$npm_config_tag\""
+		"tag:dev": "git tag dev-$(date +%Y-%m-%d-%H%M) && git push origin --tags",
+		"tag:prod": "git tag prod-$(date +%Y-%m-%d-%H%M) && git push origin --tags",
+		"ci:watch": "gh run watch"
+	},
+	"engines": {
+		"node": ">=22"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
