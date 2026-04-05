@@ -1,24 +1,37 @@
 name: CI / Deploy (SvelteKit adapter-cloudflare, tag-gated)
 
 on:
-  push:
-    branches: [main, dev]
-    tags:
-      - "dev-*"
-      - "prod-*"
+  # CI läuft bei jedem PR auf main oder dev.
+  # gibt Feedback bevor gemerged wird, und verhindert dass fehlerhafte commits in main/dev tags triggern können.
   pull_request:
     branches: [main, dev]
 
+  # Deploy läuft nur bei Tags, um sicherzustellen dass Deployments intentional und nachvollziehbar sind.
+  push:
+    tags:
+      - "dev-*"
+      - "prod-*"
+  
+# Wir brauchen nur read access auf contents, da wir keine PRs mergen oder Releases erstellen,
+# sondern nur den Tag-Namen lesen und die Historie für Guardrails.
 permissions:
   contents: read
 
+# Wir verwenden Concurrency, um sicherzustellen dass bei mehreren schnellen Commits oder Tag-Updates
+# nicht mehrere Deployments gleichzeitig laufen, was zu Konflikten führen könnte.
 concurrency:
   group: ci-deploy-${{ github.ref }}
   cancel-in-progress: true
 
+# Wir setzen den Standard-Shell für alle Run-Schritte auf bash, 
+# damit wir die gleichen Skripte lokal und in CI verwenden können.
+# -euo pipefail für alle run-Steps global:
+#   -e          = bei Fehler sofort abbrechen
+#   -u          = undefinierte Variablen sind Fehler (verhindert z.B. rm -rf "")
+#   -o pipefail = Fehler in Pipes werden nicht verschluckt
 defaults:
   run:
-    shell: bash
+    shell: bash -euo pipefail {0}
 
 jobs:
   ci:
@@ -26,36 +39,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # fetch-depth: 0 holt die komplette Historie, 
+      # für Prüfung ob der Tag-Commit in der Branch-Historie enthalten ist (Guardrails).
+      # fetch-tags: true ist nötig, damit git describe --tags funktioniert, um die Version zu ermitteln.
       - name: Checkout (full history for ancestry guardrails)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
-
+      
+      # Node-Version aus .nvmrc lesen, damit wir die gleiche Version lokal und in CI verwenden,
+      # und die Version zentral in der Repo verwalten können.
+      # Wichtig für Cloudflare Worker, da die Node-Version die unterstützten JS-Features bestimmt.
+      # Cache aktviert, npm Dependencies werden zwischen Builds gecached, was die Build-Zeit deutlich reduziert.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"  # liest aus .nvmrc
           cache: "npm"
 
+      # CI statt install, um die korrekten Versionen aus package-lock.json zu installieren, 
+      # Json.lock ist die Source of Truth. 
+      # Npm istall könnte unerwartete Updates installieren, wenn package-lock.json nicht korrekt gepflegt ist.
       - name: Install dependencies
         run: npm ci
 
+        # Führt die Type-Checks aus, um sicherzustellen dass der Code typsicher ist
+        # und keine offensichtlichen Fehler vorliegen, bevor wir Zeit in den Build investieren.
       - name: Typecheck
         run: npm run check
 
+        # Führt die Unit-Tests aus, um sicherzustellen dass die Logik korrekt funktioniert 
+        # und keine Regressionen vorliegen (Rückschritte in der Funktionalität durch Fehler im Code).
       - name: Unit tests
         run: npm run test
 
-      - name: Resolve version
-        id: version
-        run: echo "value=$(git describe --tags --always)" >> $GITHUB_OUTPUT
-
+        # Wir injecten die ermittelte Version als VITE_VERSION in den Build, 
+        # damit sie in der App verfügbar ist (z.B. für /version Endpoint oder Footer).
       - name: Build (adapter-cloudflare)
         run: npm run build
         env:
-          VITE_VERSION: ${{ steps.version.outputs.value }}
+          VITE_VERSION: ${{ github.ref_name }}  # z.B. dev-1.2.3 oder prod-1.2.3
 
+        # Dies ist wichtig, um sicherzustellen dass der Build tatsächlich die erwartlichen Dateien produziert hat,
+        # bevor wir sie als Artefakt hochladen und später deployen.
+        # SvelteKit mit adapter-cloudflare benötigt 
+        # folgende Dateien im Build-Output, um korrekt zu funktionieren.
       - name: Sanity check build output
         run: |
           set -euo pipefail
@@ -64,6 +93,13 @@ jobs:
           test -f .svelte-kit/cloudflare-tmp/manifest.js
           echo "OK: build produced .svelte-kit/cloudflare/_worker.js"
 
+
+        # Artefakte sind build outputs, die wir von einem Job zum anderen weitergeben können.
+        # Wir laden den Build-Output als Artefakt in die GitHub Storage hoch, 
+        # damit er im Deploy-Job heruntergeladen und deployt werden kann.
+        # Somit wird ein erneuter Build im deploy Job vermieden.
+        # Dies stellt sicher, dass der exakt getestete Build auch der ist, der deployed wird.
+        # retention-days: 1 sorgt dafür, dass die Artefakte nach einem Tag automatisch gelöscht werden.
       - name: Upload build artifact
         if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/tags/prod-') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/dev')
         uses: actions/upload-artifact@v4
@@ -72,27 +108,67 @@ jobs:
           path: .svelte-kit
           include-hidden-files: true
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
 
+  # ==========================================================================================================
+
+  # Deploy-Jobs sind in deploy_dev und deploy_prod aufgeteilt.
+  # Beide Deploy-Jobs benötigen den erfolgreichen Abschluss von CI (needs: ci),
+  # damit wir sicherstellen dass nur getesteter Code deployed wird.
+  # Startet nur bei Tags, um sicherzustellen dass Deployments intentional und nachvollziehbar sind.
   deploy_dev:
     name: Deploy DEV (workers.dev)
     needs: ci
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/dev-') || startsWith(github.ref, 'refs/heads/dev')
+    if: startsWith(github.ref, 'refs/tags/dev-')
     environment:
       name: dev
 
     steps:
+      # fetch-depth: 0   → History für merge-base Guardrail
+      # fetch-tags: false → Tags werden im Deploy-Job nicht gebraucht
       - name: Checkout (for guardrail + wrangler config)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: false
 
+      # Checkout holt den aktuellen Commit, auf den der Tag zeigt.
+      # Durch fetch-depth: 0 ist die komplette Commit-History vorhanden,
+      # aber es gibt noch keine Branch-Referenzen auf dem Runner.
+      #
+      # git fetch origin +refs/heads/dev:refs/remotes/origin/dev
+      #   holt den Branch-Zeiger von dev vom Remote (refs/heads/dev)
+      #   und speichert ihn lokal als refs/remotes/origin/dev.
+      #   Dieser Ref existiert erst NACH dem Fetch.
+      #
+      # GITHUB_SHA muss ein Vorfahre oder identisch mit origin/dev sein.
+      #
+      # Fall 1 — Tag auf dem neuesten Commit (häufigster Fall):
+      #   Commits: A - B - C - D
+      #   origin/dev → D, Tag → D  ✓ identisch
+      #
+      # Fall 2 — nach dem Tag wurde weitergearbeitet:
+      #   Commits: A - B - C - D - E
+      #   origin/dev → E, Tag → D  ✓ D ist Vorfahre von E
+      #
+      # Fall 3 — Tag auf einem Feature-Branch (Fehler!):
+      #   dev:     A - B - C - D
+      #   feature:         └ X - Y  ← Tag hier
+      #   origin/dev → D, Tag → Y  ✗ Y ist KEIN Vorfahre von D → Abbruch
+      #
+      # git merge-base --is-ancestor prüft dann:
+      #   Ist der Tag-Commit ein Vorfahre von origin/dev?
+      #   Ja → Tag wurde korrekt auf dev gesetzt → Deploy erlaubt.
+      #   Nein → Tag ist auf einem Feature-Branch → Abbruch.
+
+      # Einfache Schreibweise:
+      #  git fetch origin dev
+      #  git merge-base --is-ancestor "${GITHUB_SHA}" "origin/dev"
       - name: Guardrail dev tag must be on dev branch
         run: |
           set -euo pipefail
-          git fetch origin --prune +refs/heads/dev:refs/remotes/origin/dev
+          git fetch origin +refs/heads/dev:refs/remotes/origin/dev 
           if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/dev"; then
             echo "OK: tag commit is contained in origin/dev"
           else
@@ -104,35 +180,47 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"
           cache: "npm"
 
+      # Hier laden wir das Build-Artefakt herunter, das im CI-Job hochgeladen wurde.
+      # Wir legen es direkt in .svelte-kit ab, damit die Struktur für Wrangler passt
       - name: Download build artifact (overlay into repo root)
         uses: actions/download-artifact@v4
         with:
           name: cf-build
           path: .svelte-kit
-
+        
+      # Hier prüfen wir nochmal, ob das heruntergeladene Artefakt die erwarteten Dateien enthält,
+      # um sicherzustellen dass der Build tatsächlich erfolgreich war und die notwendigen Dateien für den Cloudflare
+      # Worker enthält, bevor wir versuchen zu deployen.
       - name: Sanity check artifact
         run: |
           set -euo pipefail
           test -f .svelte-kit/cloudflare/_worker.js
           echo "OK: artifact contains expected worker entry"
 
+      # npm ci installiert alle Dependencies — Wrangler wird aus
+      # devDependencies für den Deploy benötigt
       - name: Install dependencies (Wrangler from devDependencies)
         run: npm ci
 
+      # --env: Environment-Variablen für Wrangler - leer ist für Dev, "production" für Prod.
+      # --config: Pfad zur wrangler.jsonc für die Worker-Konfiguration.
       - name: Deploy to DEV
         run: npx wrangler deploy --env="" --config wrangler.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+  # ==========================================================================================================
+
+  # Hier ist der Deploy-Job für PROD, der auf Tags startet, die mit prod- beginnen.
   deploy_prod:
     name: Deploy PROD (alau.at)
     needs: ci
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/prod-') || startsWith(github.ref, 'refs/heads/main')
+    if: startsWith(github.ref, 'refs/tags/prod-')
     environment:
       name: production
 
@@ -143,10 +231,13 @@ jobs:
           fetch-depth: 0
           fetch-tags: false
 
+      # Es wird wieder der Tag-Commit ausgecheckt, auf den der prod-Tag zeigt.
+      # Mit git fetch holen wir den Branch-Zeiger von refs/heads/main vom Remote und speichern ihn lokal als refs/remotes/origin/main.
+      # Dann prüfen wir mit git merge-base --is-ancestor, ob der Tag-Commit ein Vorfahre von origin/main ist.
       - name: Guardrail prod tag must be on main branch
         run: |
           set -euo pipefail
-          git fetch origin --prune +refs/heads/main:refs/remotes/origin/main
+          git fetch origin +refs/heads/main:refs/remotes/origin/main
           if git merge-base --is-ancestor "${GITHUB_SHA}" "refs/remotes/origin/main"; then
             echo "OK: tag commit is contained in origin/main"
           else
@@ -158,7 +249,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"
           cache: "npm"
 
       - name: Download build artifact (overlay into repo root)
@@ -176,6 +267,8 @@ jobs:
       - name: Install dependencies (Wrangler from devDependencies)
         run: npm ci
 
+      # --env wird hier mit "production" gesetzt, 
+      # damit wranger.jsonc die richtigen Einstellungen für die Produktion verwendet (z.B. andere Route, andere KV-Namespaces).
       - name: Deploy to PROD
         run: npx wrangler deploy --env production --config wrangler.jsonc
         env:
