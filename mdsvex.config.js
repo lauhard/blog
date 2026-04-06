@@ -3,6 +3,7 @@ import readingTime from "mdsvex-reading-time";
 import { highlightCode } from './shiki.config.js';
 import rehypeUnwrapImages from 'rehype-unwrap-images';
 import rehypeSlug from 'rehype-slug'
+import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 export const mdsvexConfig = {
     extensions: ['.svx', '.md'],
     layout: {
@@ -21,5 +22,9 @@ export const mdsvexConfig = {
         },
     },
     remarkPlugins: [readingTime],
-    rehypePlugins: [rehypeSlug, rehypeUnwrapImages],
+    rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, {
+            behavior: 'prepend',
+            content: { type: 'text', value: '#' },
+            properties: { className: ['heading-anchor'], ariaHidden: true, tabIndex: -1 }
+        }],, rehypeUnwrapImages],
 }
