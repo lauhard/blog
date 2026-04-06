@@ -17,6 +17,7 @@ seriesHero: '/img/bp3_small.png'
 
 <script>
     import Image from "$lib/components/Image.svelte";
+    import Greeter from "$lib/components/Greeter.svelte";
 </script>
 
 ## What is Git 
@@ -56,11 +57,8 @@ You can think of it like working on a "feature workbench" for your bracelet.
 You just see the latest pearl of your "main bracelet" and from there, you implement your fancy diamond charm on the "feature bracelet".
 When you are done, you combine the "feature bracelet" back into the "main bracelet". 
 
-I hope this gives you an idea what Git is and how it works under the hood :-)
+I hope this gives you an idea what Git is and how it works under the hood. <br>
 Thanks for reading.
 
-<br>
-<br>
 
-
-Cheers!
+<Greeter></Greeter>

@@ -21,17 +21,17 @@
     h4,
     h5,
     h6 {
-        
+
         margin-block-start: var(--space-10);
-        margin-left: 2rem;
         font-weight: 900;
-        color:var(--color-ld-accent-500);
+        color: var(--color-ld-accent-500);
+
         /* 40px */
-        &::before{
-            display: block;
-            content: "#";
-            position: absolute;
-            left:1.5rem;
+        .heading-anchor {
+            color:inherit;
+            font-weight: 700;
+            font-size: inherit;
+            margin-right: .5rem;
         }
     }
 
@@ -102,16 +102,17 @@
         margin: 0;
         padding: 0;
         padding-inline: var(--space-2);
-        padding-block: var(--space-1);
-        background-color: var(--color-ld-white-400);
-        color:var(--color-ld-black-700);
+        padding-block: .15rem;
+        border: 1px solid var(--color-ld-accent-500);
+        color: var(--color-ld-accent-500);
         border-radius: var(--radius-3);
+        font-family: inherit;
         font-size: var(--span);
-        background-color: var(--color-ld-white-600);
         letter-spacing: 0;
-        &:hover{
+
+        &:hover {
             background-color: var(--color-ld-accent-500);
-            color:var(--color-ld-white-500);
+            color: var(--color-ld-white-500);
         }
     }
 
@@ -262,8 +263,7 @@
         transition: background-color, border-color var(--transition-base) ease-in-out;
         margin-bottom: 2rem;
 
-        code
-        {
+        code {
             inline-size: 100%;
             max-inline-size: 100%;
             overflow-x: auto;

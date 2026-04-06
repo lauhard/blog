@@ -67,7 +67,7 @@
         height: fit-content;
         background-color: var(--color-ld-white-400);
         margin-top: 2rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 2.5rem;
         border-radius: 1rem;
         text-wrap: balance;
         gap: 0.5rem;
