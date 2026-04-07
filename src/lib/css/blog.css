@@ -52,6 +52,7 @@
 
         /* was: margin-top/bottom: 2rem; -> tokenisiert */
         margin-block: var(--space-8);
+        z-index: 10;
     }
 
     .codesandbox,
@@ -62,7 +63,7 @@
         align-self: center;
         block-size: 600px;
         box-sizing: border-box;
-
+z-index: 10;
         /* was: var(--size-*) -> replaced with our spacing/radius tokens */
         margin-block-end: var(--space-6);
 
@@ -70,7 +71,7 @@
         border-radius: var(--radius-card);
 
         /* was: var(--shadow-5) -> map to your defined tokens */
-        box-shadow: var(--shadow-md);
+        /* box-shadow: var(--shadow-md); */
 
         /* was: var(--animation-time) -> map to your transitions */
         transition: box-shadow, border-color var(--transition-base) ease-in-out;
@@ -109,6 +110,7 @@
         font-family: inherit;
         font-size: var(--span);
         letter-spacing: 0;
+        z-index: 10;
 
         &:hover {
             background-color: var(--color-ld-accent-500);
@@ -247,13 +249,13 @@
         box-sizing: border-box;
         margin: 0;
         padding: 0;
-
+        z-index: 10;
         /* was: border-radius: 0 0 var(--size-2) ... -> now with radius token */
         border-radius: 0 0 var(--radius-5) var(--radius-5);
         overflow: hidden;
 
         /* was: var(--shadow-5) -> map */
-        box-shadow: var(--shadow-md);
+        /* box-shadow: var(--shadow-md); */
 
         /* was: explicit borders with color -> use border tokens */
         border-inline-start: var(--border-default);
@@ -273,6 +275,7 @@
             padding: 0;
             padding-inline-start: var(--space-4);
             padding-block-end: var(--space-3);
+            z-index: 10;
 
         }
     }

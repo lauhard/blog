@@ -11,7 +11,7 @@ categories:
     - test
     - blub
     
-published: false
+published: true
 image: '/img/bp1_small.png'
 ---
 
