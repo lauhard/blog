@@ -19,7 +19,7 @@
         /* Fluid root font size: 15px @ 320px → 18px @ 1280px viewport.
            Using em (not px) so user browser font preferences are respected. */
         /* font-size: clamp(0.9375em, 0.875em + 0.3125vw, 1.125em); */
-        scroll-behavior: smooth;
+        /* scroll-behavior: smooth; */
         scrollbar-gutter: stable;
         scrollbar-width: thin;
         -moz-text-size-adjust: auto;

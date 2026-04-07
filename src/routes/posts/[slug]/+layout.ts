@@ -1,4 +1,4 @@
-import { getPostBySlug } from "$lib";
+import { getPostBySlug, markdownFiles } from "$lib";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 
@@ -10,8 +10,10 @@ export const load: LayoutLoad = async ({ params }) => {
         if (!blogContent) {
             throw new Error("Post not found or is a draft");
         }
+        const posts = await markdownFiles();
         return {
-            ...blogContent
+            ...blogContent,
+            posts
         }
     } catch (e) {
         error(404, { message: (e as Error)?.message } as App.Error);

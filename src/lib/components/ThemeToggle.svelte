@@ -57,6 +57,17 @@
         border-radius: 100vw;
         border: 2px solid var(--color-ld-accent-500);
         position: relative;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        cursor: pointer;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-sm);
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
 
         .theme {
             display: flex;
@@ -75,13 +86,18 @@
             color: var(--color-black-500);
             left: 0%;
             transition:
-                left 300ms ease-in-out,
-                opacity 300ms ease-in-out;
+                left 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 300ms ease-in-out,
+                transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
         }
     }
 
     .btn-theme:has(.theme-light.active) {
-        .theme-light,
+        .theme-light {
+            left: 0%;
+            opacity: 100%;
+            transform: rotate(360deg);
+        }
         .theme-dark {
             left: 0%;
             opacity: 100%;
@@ -91,8 +107,12 @@
         }
     }
     .btn-theme:has(.theme-dark.active) {
-        .theme-light,
         .theme-dark {
+            left: 50%;
+            opacity: 100%;
+            transform: rotate(-360deg);
+        }
+        .theme-light {
             left: 50%;
             opacity: 100%;
         }
